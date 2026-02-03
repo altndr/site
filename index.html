@@ -62,10 +62,11 @@
     </div>
 
     <script>
-        const PROXY = 'https://corsproxy.io/?';
+        // Updated to AllOrigins (Raw) which is more compatible with GitHub Pages
+        const PROXY = 'https://api.allorigins.win/raw?url=';
         const API_KEY = 'd73d6850-17db-4476-b6b6-3a8af022d405';
         
-        // Fixed path: /v1/player/{username}
+        // FIXED PATH: Ensures /v1/ is only present once
         const getPlayerUrl = (user) => `${PROXY}${encodeURIComponent(`https://craftersmc.net/v1/player/${user}`)}`;
 
         function renderKV(container, obj) {
@@ -107,28 +108,27 @@
             const content = document.getElementById('playerContent');
 
             btn.disabled = true;
-            status.innerHTML = '<i class="fas fa-circle-notch fa-spin text-2xl"></i><br>Fetching CraftersMC Profile...';
+            status.innerHTML = '<i class="fas fa-circle-notch fa-spin text-2xl"></i><br>Connecting to Network...';
             content.classList.add('hidden');
 
             try {
-                // Fetch call using correct headers and fixed path
+                // Fetch call targeting the specific Player schema
                 const response = await fetch(getPlayerUrl(user), {
                     headers: { 'X-Web-Key': API_KEY }
                 });
 
-                if (!response.ok) throw new Error(response.status === 404 ? 'Player Not Found' : 'API Error');
+                if (!response.ok) throw new Error(response.status === 404 ? 'Player Not Found' : 'Proxy Error');
 
                 const data = await response.json();
 
-                // Update UI based on Player schema
+                // Binding to CraftersMC Player schema properties
                 document.getElementById('playerName').textContent = data.name || user;
                 document.getElementById('playerRank').textContent = data.selectedRank || 'DEFAULT';
                 document.getElementById('playerSkin').src = `https://minotar.net/helm/${user}/100.png`;
 
-                // Quick Stats
                 const netStats = document.getElementById('networkStats');
                 netStats.innerHTML = `
-                    <div class="kv"><div class="k">Coins</div><div class="v">${data.networkCoins || 0}</div></div>
+                    <div class="kv"><div class="k">Coins</div><div class="v">${data.networkCoins.toLocaleString() || 0}</div></div>
                     <div class="kv"><div class="k">First Login</div><div class="v">${new Date(data.firstLogin).toLocaleDateString()}</div></div>
                     <div class="kv"><div class="k">Last Server</div><div class="v">${data.lastServer || 'OFFLINE'}</div></div>
                 `;
@@ -136,22 +136,19 @@
                 const playtime = document.getElementById('playtimeStats');
                 playtime.innerHTML = `<div class="kv"><div class="k">Total Playtime</div><div class="v">${Math.floor(data.totalPlaytime / 3600)} Hours</div></div>`;
 
-                // Render Full KV
                 renderKV(document.getElementById('rawContainer'), data);
 
                 status.classList.add('hidden');
                 content.classList.remove('hidden');
             } catch (err) {
-                status.innerHTML = `<span class="text-red-500 font-bold">Error: ${err.message}</span>`;
+                status.innerHTML = `<span class="text-red-500 font-bold">CORS/Fetch Error: ${err.message}</span><br><p class="text-xs text-gray-400 mt-2">The proxy may be temporarily blocking GitHub Pages.</p>`;
             } finally {
                 btn.disabled = false;
             }
         }
 
         document.getElementById('searchBtn').addEventListener('click', loadPlayer);
-        document.getElementById('usernameInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') loadPlayer();
-        });
+        document.getElementById('usernameInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') loadPlayer(); });
     </script>
 </body>
 </html>
