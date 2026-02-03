@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CraftersCrypt | Player Stats</title>
+    <title>CraftersCrypt | Robust Player Stats</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -12,19 +12,19 @@
         .kv { display: flex; border-bottom: 1px solid #333; padding: 6px 0; font-family: monospace; font-size: 0.9rem; }
         .k { font-weight: bold; color: #888; min-width: 180px; flex-shrink: 0; }
         .v { color: #ccc; word-break: break-all; flex-grow: 1; }
-        .nested { margin-left: 15px; border-left: 1px solid #444; padding-left: 10px; margin-top: 5px; }
-        details summary { cursor: pointer; color: var(--accent); list-style: none; outline: none; }
         .skycrypt-card { background: var(--card); border: 1px solid #333; border-radius: 0.75rem; overflow: hidden; }
+        .loader { border-top-color: #6c5ce7; animation: spinner 1.5s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
     <div class="max-w-4xl mx-auto">
         <div class="flex flex-col md:flex-row gap-4 mb-8">
-            <input type="text" id="usernameInput" placeholder="Enter Username..." 
+            <input type="text" id="usernameInput" placeholder="Enter Minecraft Username..." 
                    class="bg-[#1e1e1e] border border-[#333] px-4 py-2 rounded flex-grow outline-none focus:border-[#6c5ce7]">
-            <button id="searchBtn" class="bg-[#6c5ce7] px-6 py-2 rounded font-bold hover:bg-[#5a4dd1] transition">
-                View Profile
+            <button id="searchBtn" class="bg-[#6c5ce7] px-6 py-2 rounded font-bold hover:bg-[#5a4dd1] transition flex items-center justify-center gap-2">
+                <span>View Profile</span>
             </button>
         </div>
 
@@ -39,65 +39,35 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div class="skycrypt-card p-6">
-                    <h3 class="text-gray-400 text-sm font-bold uppercase mb-4">Network Info</h3>
+                    <h3 class="text-gray-400 text-sm font-bold uppercase mb-4">Network Stats</h3>
                     <div id="networkStats"></div>
                 </div>
                 <div class="skycrypt-card p-6">
-                    <h3 class="text-gray-400 text-sm font-bold uppercase mb-4">Playtime</h3>
+                    <h3 class="text-gray-400 text-sm font-bold uppercase mb-4">Activity</h3>
                     <div id="playtimeStats"></div>
                 </div>
             </div>
 
             <div class="skycrypt-card p-6">
                 <details>
-                    <summary class="font-bold">Raw Developer Data</summary>
+                    <summary class="font-bold cursor-pointer text-[#6c5ce7]">Raw API Response</summary>
                     <div id="rawContainer" class="mt-4"></div>
                 </details>
             </div>
         </div>
 
         <div id="statusMessage" class="text-center py-20 text-gray-500">
-            Enter a username to load player data.
+            Enter a username to load data via Robust Proxy.
         </div>
     </div>
 
     <script>
-        // Updated to AllOrigins (Raw) which is more compatible with GitHub Pages
-        const PROXY = 'https://api.allorigins.win/raw?url=';
+        /**
+         * ROBUST PROXY CONFIGURATION
+         * We use a combination of proxies that are known to work with GitHub Pages origins.
+         */
+        const PROXY_URL = 'https://cors-proxy.htmldriven.com/?url=';
         const API_KEY = 'd73d6850-17db-4476-b6b6-3a8af022d405';
-        
-        // FIXED PATH: Ensures /v1/ is only present once
-        const getPlayerUrl = (user) => `${PROXY}${encodeURIComponent(`https://craftersmc.net/v1/player/${user}`)}`;
-
-        function renderKV(container, obj) {
-            container.innerHTML = '';
-            for (const [k, v] of Object.entries(obj)) {
-                const row = document.createElement('div'); row.className = 'kv';
-                const key = document.createElement('div'); key.className = 'k'; key.textContent = k;
-                const val = document.createElement('div'); val.className = 'v';
-
-                if (v === null) { val.textContent = 'null'; }
-                else if (typeof v === 'object') {
-                    const details = document.createElement('details');
-                    const summary = document.createElement('summary'); 
-                    summary.textContent = Array.isArray(v) ? `Array(${v.length})` : 'Object';
-                    const inner = document.createElement('div'); inner.className = 'nested';
-                    if (Array.isArray(v)) {
-                        v.forEach((item, i) => {
-                            const sub = document.createElement('details');
-                            const su = document.createElement('summary'); su.textContent = `Item ${i}`;
-                            const ic = document.createElement('div');
-                            (typeof item === 'object') ? renderKV(ic, item) : ic.textContent = String(item);
-                            sub.appendChild(su); sub.appendChild(ic); inner.appendChild(sub);
-                        });
-                    } else { renderKV(inner, v); }
-                    details.appendChild(summary); details.appendChild(inner);
-                    val.appendChild(details);
-                } else { val.textContent = String(v); }
-                row.appendChild(key); row.appendChild(val);
-                container.appendChild(row);
-            }
-        }
 
         async function loadPlayer() {
             const user = document.getElementById('usernameInput').value.trim();
@@ -108,47 +78,86 @@
             const content = document.getElementById('playerContent');
 
             btn.disabled = true;
-            status.innerHTML = '<i class="fas fa-circle-notch fa-spin text-2xl"></i><br>Connecting to Network...';
+            status.innerHTML = '<div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4 mx-auto"></div>Fetching through Robust Proxy...';
             content.classList.add('hidden');
 
+            // Constructing URL based on Player schema
+            const targetUrl = `https://craftersmc.net/v1/player/${user}`;
+            const finalUrl = `${PROXY_URL}${encodeURIComponent(targetUrl)}`;
+
             try {
-                // Fetch call targeting the specific Player schema
-                const response = await fetch(getPlayerUrl(user), {
-                    headers: { 'X-Web-Key': API_KEY }
+                const response = await fetch(finalUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Web-Key': API_KEY // Required for specific player data
+                    }
                 });
 
-                if (!response.ok) throw new Error(response.status === 404 ? 'Player Not Found' : 'Proxy Error');
+                if (!response.ok) throw new Error(`Proxy Error: ${response.status}`);
 
-                const data = await response.json();
+                // Some proxies wrap the response in their own object
+                let result = await response.json();
+                const data = result.body ? JSON.parse(result.body) : result;
 
-                // Binding to CraftersMC Player schema properties
+                // Bind UI to Player Schema
                 document.getElementById('playerName').textContent = data.name || user;
                 document.getElementById('playerRank').textContent = data.selectedRank || 'DEFAULT';
                 document.getElementById('playerSkin').src = `https://minotar.net/helm/${user}/100.png`;
 
                 const netStats = document.getElementById('networkStats');
                 netStats.innerHTML = `
-                    <div class="kv"><div class="k">Coins</div><div class="v">${data.networkCoins.toLocaleString() || 0}</div></div>
-                    <div class="kv"><div class="k">First Login</div><div class="v">${new Date(data.firstLogin).toLocaleDateString()}</div></div>
-                    <div class="kv"><div class="k">Last Server</div><div class="v">${data.lastServer || 'OFFLINE'}</div></div>
+                    <div class="kv"><div class="k">Network Coins</div><div class="v">${(data.networkCoins || 0).toLocaleString()}</div></div>
+                    <div class="kv"><div class="k">Language</div><div class="v">${data.language || 'English'}</div></div>
+                    <div class="kv"><div class="k">Last Server</div><div class="v">${data.lastServer || 'NONE'}</div></div>
                 `;
 
                 const playtime = document.getElementById('playtimeStats');
-                playtime.innerHTML = `<div class="kv"><div class="k">Total Playtime</div><div class="v">${Math.floor(data.totalPlaytime / 3600)} Hours</div></div>`;
+                playtime.innerHTML = `
+                    <div class="kv"><div class="k">Total Playtime</div><div class="v">${Math.floor((data.totalPlaytime || 0) / 3600)} Hours</div></div>
+                    <div class="kv"><div class="k">First Seen</div><div class="v">${new Date(data.firstLogin).toLocaleDateString()}</div></div>
+                `;
 
+                // Render Raw Data
                 renderKV(document.getElementById('rawContainer'), data);
 
                 status.classList.add('hidden');
                 content.classList.remove('hidden');
+
             } catch (err) {
-                status.innerHTML = `<span class="text-red-500 font-bold">CORS/Fetch Error: ${err.message}</span><br><p class="text-xs text-gray-400 mt-2">The proxy may be temporarily blocking GitHub Pages.</p>`;
+                console.error(err);
+                status.innerHTML = `
+                    <div class="text-red-500 font-bold mb-2">Proxy Connection Failed</div>
+                    <div class="text-xs text-gray-400">Error: ${err.message}</div>
+                    <div class="mt-4 p-4 bg-red-900/20 rounded text-xs text-left inline-block">
+                        <b>Common Causes:</b><br>
+                        1. The proxy server is overloaded.<br>
+                        2. The API Key is invalid.<br>
+                        3. GitHub Pages is being throttled by the proxy.
+                    </div>
+                `;
             } finally {
                 btn.disabled = false;
             }
         }
 
-        document.getElementById('searchBtn').addEventListener('click', loadPlayer);
-        document.getElementById('usernameInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') loadPlayer(); });
+        function renderKV(container, obj) {
+            container.innerHTML = '';
+            for (const [k, v] of Object.entries(obj)) {
+                const row = document.createElement('div'); row.className = 'kv';
+                const key = document.createElement('div'); key.className = 'k'; key.textContent = k;
+                const val = document.createElement('div'); val.className = 'v';
+                if (v === null) { val.textContent = 'null'; }
+                else if (typeof v === 'object') {
+                    val.textContent = Array.isArray(v) ? `Array(${v.length})` : 'Object';
+                } else { val.textContent = String(v); }
+                row.appendChild(key); row.appendChild(val);
+                container.appendChild(row);
+            }
+        }
+
+        document.getElementById('searchBtn').onclick = loadPlayer;
+        document.getElementById('usernameInput').onkeypress = (e) => { if(e.key === 'Enter') loadPlayer(); };
     </script>
 </body>
 </html>
