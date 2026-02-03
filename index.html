@@ -2,206 +2,366 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CraftersCrypt | OpenAPI Status</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CraftersCrypt | Network Status</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root { --bg: #121212; --card: #1e1e1e; --accent: #6c5ce7; }
-        body { background: var(--bg); color: #e0e0e0; font-family: sans-serif; }
-        .kv { display: flex; border-bottom: 1px solid #333; padding: 4px 0; font-family: monospace; font-size: 0.85rem; }
-        .k { font-weight: bold; color: #888; min-width: 160px; }
-        .v { color: #ccc; word-break: break-all; }
-        .nested { margin-left: 15px; border-left: 1px solid #444; padding-left: 10px; }
-        details summary { cursor: pointer; color: var(--accent); list-style: none; }
-        details summary::-webkit-details-marker { display: none; }
-        .games-table { width: 100%; border-collapse: collapse; }
-        .games-table th { text-align: left; border-bottom: 2px solid #444; padding: 8px; }
-        .games-table td { border-bottom: 1px solid #333; padding: 8px; }
+        :root {
+            --bg-dark: #121212;
+            --bg-card: #1e1e1e;
+            --accent: #6c5ce7;
+            --text-main: #e0e0e0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* --- Your Custom KV Styles Adapted for Dark Mode --- */
+        .kv { display: flex; border-bottom: 1px solid #333; padding: 4px 0; font-family: monospace; font-size: 0.9em; }
+        .kv:last-child { border-bottom: none; }
+        .k { font-weight: bold; color: #a0a0a0; min-width: 150px; flex-shrink: 0; }
+        .v { color: #cecece; word-break: break-all; flex-grow: 1; }
+        
+        details > summary { cursor: pointer; color: var(--accent); outline: none; list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        details > summary::before { content: '►'; display: inline-block; margin-right: 6px; font-size: 0.8em; transition: transform 0.2s; }
+        details[open] > summary::before { transform: rotate(90deg); }
+        
+        .nested { margin-left: 15px; border-left: 1px solid #444; padding-left: 10px; margin-top: 5px; }
+        
+        /* Games Table */
+        .games-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .games-table th { text-align: left; border-bottom: 2px solid #444; padding: 8px; color: #fff; }
+        .games-table td { border-bottom: 1px solid #333; padding: 8px; color: #ccc; }
+        .games-table tr:hover { background: rgba(255,255,255,0.05); }
+
+        .skycrypt-card {
+            background-color: var(--bg-card);
+            border: 1px solid #333;
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="min-h-screen flex flex-col">
 
-    <div class="max-w-4xl mx-auto">
-        <header class="flex justify-between items-center mb-8">
-            <h1 class="text-2xl font-bold">Network <span class="text-[#6c5ce7]">Analytics</span></h1>
-            <button id="refreshBtn" class="bg-[#6c5ce7] px-4 py-2 rounded font-bold hover:bg-[#5a4dd1] transition">Refresh</button>
-        </header>
+    <nav class="bg-[#1a1a1a] border-b border-[#333] py-4 sticky top-0 z-50 shadow-md">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <img src="https://craftersmc.net/data/assets/logo/newOriginal512.png" alt="Logo" class="h-10 w-10">
+                <h1 class="text-xl font-bold tracking-tight">Crafters<span class="text-[#6c5ce7]">Crypt</span></h1>
+            </div>
+            <div>
+                <button id="refreshBtn" class="bg-[#333] hover:bg-[#444] text-white px-3 py-1 rounded text-sm transition">
+                    <i class="fas fa-sync-alt mr-1"></i> Refresh
+                </button>
+            </div>
+        </div>
+    </nav>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="bg-[#1e1e1e] p-6 rounded-xl border border-[#333]">
-                <div class="text-gray-500 text-xs font-bold uppercase">Online</div>
-                <div id="activePlayers" class="text-3xl font-mono text-white">—</div>
-                <div id="activePlayersSmall" class="text-xs text-gray-500">Max: —</div>
+    <main class="container mx-auto px-4 py-8">
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 network-top-info">
+            <div class="skycrypt-card p-6 flex items-center justify-between">
+                <div>
+                    <h3 class="text-gray-400 text-sm font-bold uppercase tracking-wider">Online Players</h3>
+                    <div class="text-3xl font-bold text-white mt-1" id="activePlayers">—</div>
+                    <div class="text-sm text-gray-500 mt-1" id="activePlayersSmall">Max: —</div>
+                </div>
+                <div class="h-12 w-12 bg-[#2a2a2a] rounded-full flex items-center justify-center text-[#6c5ce7]">
+                    <i class="fas fa-users text-xl"></i>
+                </div>
             </div>
-            <div class="bg-[#1e1e1e] p-6 rounded-xl border border-[#333]">
-                <div class="text-gray-500 text-xs font-bold uppercase">Status</div>
-                <div id="networkStatus" class="text-3xl font-mono text-white">—</div>
-                <div id="plannedMaintenance" class="text-xs text-red-400"></div>
+
+            <div class="skycrypt-card p-6 flex items-center justify-between">
+                <div>
+                    <h3 class="text-gray-400 text-sm font-bold uppercase tracking-wider">Network Status</h3>
+                    <div class="text-3xl font-bold text-white mt-1" id="networkStatus">—</div>
+                    <div class="text-sm text-gray-500 mt-1">Global System Health</div>
+                </div>
+                <div class="h-12 w-12 bg-[#2a2a2a] rounded-full flex items-center justify-center text-green-400">
+                    <i class="fas fa-server text-xl"></i>
+                </div>
             </div>
-            <div class="bg-[#1e1e1e] p-6 rounded-xl border border-[#333]">
-                <div class="text-gray-500 text-xs font-bold uppercase">Required Rank</div>
-                <div id="whitelistRank" class="text-xl font-mono text-yellow-500 mt-2">—</div>
+
+            <div class="skycrypt-card p-6 flex items-center justify-between">
+                <div>
+                    <h3 class="text-gray-400 text-sm font-bold uppercase tracking-wider">Access Level</h3>
+                    <div class="text-xl font-bold text-white mt-1" id="whitelistRank">—</div>
+                    <div class="text-sm text-gray-500 mt-1">Required Rank to Join</div>
+                </div>
+                <div class="h-12 w-12 bg-[#2a2a2a] rounded-full flex items-center justify-center text-yellow-500">
+                    <i class="fas fa-lock text-xl"></i>
+                </div>
             </div>
         </div>
 
-        <div id="detailsContainer" class="bg-[#1e1e1e] p-6 rounded-xl border border-[#333]">
-            <div class="animate-pulse text-gray-500">Initializing...</div>
+        <div class="skycrypt-card p-6">
+            <h2 class="text-xl font-bold mb-4 border-b border-[#333] pb-2">Detailed Network Analytics</h2>
+            <div id="detailsContainer" class="space-y-4">
+                <div class="text-center py-10 text-gray-500">
+                    <i class="fas fa-circle-notch fa-spin text-2xl mb-2"></i><br>
+                    Loading Network Data...
+                </div>
+            </div>
         </div>
-    </div>
+
+    </main>
 
     <script>
+        // --- CONSTANTS & CONFIG ---
         const PROXY = 'https://corsproxy.io/?';
-        const API_PATH = `${PROXY}${encodeURIComponent('https://craftersmc.net/v1/network/status')}`;
-        const CACHE_KEY = 'network-status-cache';
-        const TTL = 60 * 1000;
+        const API_BASE = 'https://craftersmc.net';
+        const API_PATH = `${PROXY}${encodeURIComponent(API_BASE + '/v1/network/status')}`;
+        
+        const CACHE_KEY = 'crafters-network-status-cache';
+        const TTL = 60 * 1000; // 1 Minute Cache
 
-        // --- Logic provided by you, updated for CraftersMC Schema ---
+        const API_KEY = 'd73d6850-17db-4476-b6b6-3a8af022d405';
+        const HEADERS = {
+            'Content-Type': 'application/json',
+            'X-Web-Key': API_KEY,
+            'Authorization': `Bearer ${API_KEY}`
+        };
+
+        // --- UTILS (From your snippet) ---
 
         function renderKV(container, obj) {
             container.innerHTML = '';
             for (const [k, v] of Object.entries(obj)) {
                 const row = document.createElement('div');
                 row.className = 'kv';
-                const key = document.createElement('div'); key.className = 'k'; key.textContent = k;
-                const val = document.createElement('div'); val.className = 'v';
 
+                const key = document.createElement('div'); key.className = 'k';
+                key.textContent = k;
+
+                const val = document.createElement('div'); val.className = 'v';
                 if (v === null) { val.textContent = 'null'; }
                 else if (typeof v === 'object') {
                     const details = document.createElement('details');
                     const summary = document.createElement('summary'); 
                     summary.textContent = Array.isArray(v) ? `Array(${v.length})` : 'Object';
+                    
                     const inner = document.createElement('div'); inner.className = 'nested';
                     if (Array.isArray(v)) {
                         v.forEach((item, i) => {
                             const sub = document.createElement('details');
                             const su = document.createElement('summary'); su.textContent = `Item ${i}`;
                             const ic = document.createElement('div'); ic.className = 'details-content';
-                            if (typeof item === 'object') { renderKV(ic, item); } 
-                            else { ic.textContent = String(item); }
+                            if (typeof item === 'object') {
+                                renderKV(ic, item);
+                            } else { ic.textContent = String(item); }
                             sub.appendChild(su); sub.appendChild(ic); inner.appendChild(sub);
                         });
-                    } else { renderKV(inner, v); }
+                    } else {
+                        renderKV(inner, v);
+                    }
                     details.appendChild(summary); details.appendChild(inner);
                     val.appendChild(details);
-                } else { val.textContent = String(v); }
+                } else {
+                    val.textContent = String(v);
+                }
                 row.appendChild(key); row.appendChild(val);
                 container.appendChild(row);
             }
         }
 
-        // Adapted flattenGames to handle the "modes" object inside GameCount
         function flattenGames(games) {
             const rows = [];
-            // Numeric keys found in ServerStatusResponse schemas
-            const numericKeys = ['playerCount', 'count', 'value', 'online'];
+            const numericKeys = ['playerCount','player_count','players','count','value','online'];
 
             function recurse(obj, prefix = '') {
                 for (const [k, v] of Object.entries(obj)) {
-                    const currentKey = prefix ? `${prefix}.${k}` : k;
+                    const currentKey = prefix ? `${prefix} > ${k}` : k; // Changed dot to arrow for readability
                     if (v === null) continue;
-                    
-                    // Direct number check
-                    if (typeof v === 'number') {
-                        rows.push({ key: currentKey, label: k, value: v });
+                    if (typeof v === 'number' || (typeof v === 'string' && !isNaN(Number(v)))) {
+                        rows.push({ key: currentKey, label: k, value: Number(v) });
                         continue;
                     }
-                    
                     if (typeof v === 'object') {
-                        // Check if this is a GameCount object containing 'modes'
-                        if (k === 'modes' || v.modes) {
-                            recurse(v.modes || v, currentKey);
-                        } else {
-                            let found = null;
-                            for (const nk of numericKeys) {
-                                if (nk in v && typeof v[nk] === 'number') {
-                                    found = v[nk]; break;
-                                }
+                        let found = null;
+                        for (const nk of numericKeys) {
+                            if (nk in v && (typeof v[nk] === 'number' || (typeof v[nk] === 'string' && !isNaN(Number(v[nk]))))) {
+                                found = v[nk]; break;
                             }
-                            if (found !== null) { rows.push({ key: currentKey, label: k, value: found }); } 
-                            else { recurse(v, currentKey); }
+                        }
+                        if (found !== null) {
+                            rows.push({ key: currentKey, label: k, value: Number(found) });
+                        } else {
+                            recurse(v, currentKey);
                         }
                     }
                 }
             }
             recurse(games);
+            rows.sort((a,b) => b.value - a.value); // Sort by player count descending
             return rows;
         }
+
+        // Mock label map since we don't have the external file, 
+        // but we can map common internal names to nice ones here.
+        const INTERNAL_LABEL_MAP = {
+            'skyblock': 'SkyBlock',
+            'hub': 'Main Hub',
+            'limbo': 'Limbo'
+        };
 
         function buildGamesTable(games) {
             const table = document.createElement('table');
             table.className = 'games-table';
-            table.innerHTML = '<thead><tr><th>Server Mode</th><th>Players</th></tr></thead>';
+
+            const thead = document.createElement('thead');
+            thead.innerHTML = '<tr><th>Server / Mode</th><th>Online</th></tr>';
+            table.appendChild(thead);
+
             const tbody = document.createElement('tbody');
             const rows = flattenGames(games);
 
-            rows.forEach(r => {
+            for (const r of rows) {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td class="font-mono text-sm">${r.key.replace('games.', '')}</td><td class="font-bold text-[#6c5ce7]">${r.value}</td>`;
+                
+                const tdName = document.createElement('td');
+                // Clean up the key name for display
+                let displayName = r.key.replace(/_/g, ' ').toUpperCase();
+                tdName.textContent = displayName;
+                tdName.className = 'font-mono text-sm';
+
+                const tdVal = document.createElement('td'); 
+                tdVal.textContent = String(r.value);
+                tdVal.className = 'font-bold text-[#6c5ce7]';
+                
+                tr.appendChild(tdName); tr.appendChild(tdVal); tbody.appendChild(tr);
+            }
+
+            if (rows.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td colspan="2" class="text-center text-gray-500 italic">No specific game data available.</td>';
                 tbody.appendChild(tr);
-            });
+            }
+
             table.appendChild(tbody);
             return table;
         }
 
-        async function applyData(data) {
-            // Fields from ServerStatusResponse
-            document.getElementById('activePlayers').textContent = data.playerCount ?? '—';
-            document.getElementById('activePlayersSmall').textContent = `Max: ${data.maxPlayerCount ?? '—'}`;
-            document.getElementById('networkStatus').textContent = data.fullMaintenance ? 'MAINTENANCE' : 'ONLINE';
-            document.getElementById('networkStatus').className = data.fullMaintenance ? 'text-3xl font-mono text-red-500' : 'text-3xl font-mono text-green-400';
-            document.getElementById('whitelistRank').textContent = data.whitelistRank ?? 'NONE';
+        // --- CORE LOGIC ---
 
-            if (data.plannedMaintenance) {
-                document.getElementById('plannedMaintenance').textContent = `Maint: ${data.plannedMaintenance.reason || 'Scheduled'}`;
-            }
+        function getCached() {
+            const raw = localStorage.getItem(CACHE_KEY);
+            if (!raw) return null;
+            try { return JSON.parse(raw); } catch (e) { localStorage.removeItem(CACHE_KEY); return null; }
+        }
 
-            const container = document.getElementById('detailsContainer');
-            container.innerHTML = '<h2 class="text-lg font-bold mb-4">Distribution</h2>';
+        function setText(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value;
+        }
 
+        async function applyData(data, meta) {
+            // Update Top Cards
+            const playerCount = data.playerCount ?? '—';
+            const maxPlayerCount = data.maxPlayerCount ?? '—';
+            const maintenance = data.fullMaintenance === true ? 'Full Maintenance' : (data.fullMaintenance === false ? 'Online' : 'Issues');
+            const whitelist = data.whitelistRank || "None";
+
+            setText('activePlayers', playerCount);
+            setText('activePlayersSmall', `Max Capacity: ${maxPlayerCount}`);
+            setText('networkStatus', maintenance);
+            
+            // Color code maintenance
+            const statusEl = document.getElementById('networkStatus');
+            if(data.fullMaintenance) statusEl.className = "text-3xl font-bold text-red-500 mt-1";
+            else statusEl.className = "text-3xl font-bold text-green-400 mt-1";
+
+            setText('whitelistRank', whitelist);
+
+            // Update Details Container
+            const detailsContainer = document.getElementById('detailsContainer');
+            detailsContainer.innerHTML = '';
+
+            // 1. Games Table (Using your logic)
             if (data.games) {
-                const gamesDetails = document.createElement('details');
-                gamesDetails.open = true;
-                const summary = document.createElement('summary'); summary.textContent = 'Server List';
-                const inner = document.createElement('div');
-                inner.appendChild(buildGamesTable(data.games));
-                gamesDetails.appendChild(summary); gamesDetails.appendChild(inner);
-                container.appendChild(gamesDetails);
+                const gamesSection = document.createElement('div');
+                gamesSection.className = 'mb-6';
+                gamesSection.innerHTML = '<h3 class="text-gray-400 font-bold mb-2 text-sm uppercase">Game Distribution</h3>';
+                
+                const table = buildGamesTable(data.games);
+                gamesSection.appendChild(table);
+                detailsContainer.appendChild(gamesSection);
             }
 
-            const rawDetails = document.createElement('details');
-            rawDetails.className = "mt-6 border-t border-[#333] pt-4";
-            const rs = document.createElement('summary'); rs.textContent = 'Full Response Explorer (renderKV)';
-            const content = document.createElement('div');
-            renderKV(content, data);
-            rawDetails.appendChild(rs); rawDetails.appendChild(content);
-            container.appendChild(rawDetails);
+            // 2. Raw Data Explorer (Using your renderKV logic)
+            const mainDetails = document.createElement('details');
+            mainDetails.className = 'bg-[#111] border border-[#333] rounded p-2';
+            const s = document.createElement('summary'); 
+            s.innerHTML = `<span class="font-bold">Developer View</span> <span class="text-xs text-gray-500 ml-2">Source: ${meta.source} (${new Date(meta.ts).toLocaleTimeString()})</span>`;
+            
+            const c = document.createElement('div'); 
+            c.className = 'mt-4 p-2 bg-black rounded border border-[#222] overflow-x-auto';
+            
+            renderKV(c, data);
+            
+            mainDetails.appendChild(s); 
+            mainDetails.appendChild(c);
+            detailsContainer.appendChild(mainDetails);
         }
 
-        // --- Cache and Fetch Wrapper ---
-
-        async function fetchData() {
-            const btn = document.getElementById('refreshBtn');
-            btn.disabled = true; btn.textContent = '...';
+        async function fetchData(force = false) {
+            const refreshBtn = document.getElementById('refreshBtn');
             try {
-                const resp = await fetch(API_PATH);
+                if (refreshBtn) { refreshBtn.disabled = true; refreshBtn.innerHTML = '<i class="fas fa-spin fa-sync-alt"></i>'; }
+                
+                const resp = await fetch(API_PATH, { headers: HEADERS });
+                if (!resp.ok) throw new Error(`API error: ${resp.status}`);
+                
                 const data = await resp.json();
-                localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data }));
-                applyData(data);
-            } catch (e) {
-                console.error(e);
-                const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
-                if (cached) applyData(cached.data);
+                const now = Date.now();
+                
+                localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: now, data }));
+                await applyData(data, { source: 'LIVE API', ts: now });
+                
+            } catch (err) {
+                console.error('Fetch error:', err);
+                const cached = getCached();
+                const detailsContainer = document.getElementById('detailsContainer');
+                
+                if (!cached) {
+                    if (detailsContainer) detailsContainer.innerHTML = `<div class="text-red-500 p-4 border border-red-800 bg-red-900/20 rounded">Error loading network status: ${err.message}</div>`;
+                } else {
+                    await applyData(cached.data, { source: 'CACHE (Offline Mode)', ts: cached.ts });
+                    // Visual warning for stale data
+                    const warning = document.createElement('div');
+                    warning.className = 'mb-4 p-2 bg-yellow-900/30 border border-yellow-700 text-yellow-200 text-sm rounded';
+                    warning.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Could not reach server. Showing cached data from ${new Date(cached.ts).toLocaleTimeString()}.`;
+                    detailsContainer.prepend(warning);
+                }
             } finally {
-                btn.disabled = false; btn.textContent = 'Refresh';
+                if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.innerHTML = '<i class="fas fa-sync-alt mr-1"></i> Refresh'; }
             }
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
-            if (cached && (Date.now() - cached.ts < TTL)) applyData(cached.data);
-            else fetchData();
-            document.getElementById('refreshBtn').onclick = fetchData;
+        async function loadStatus() {
+            const cached = getCached();
+            if (cached) {
+                await applyData(cached.data, { source: 'CACHE', ts: cached.ts });
+                if (Date.now() - cached.ts > TTL) {
+                    fetchData(); // Background refresh if stale
+                }
+            } else {
+                fetchData();
+            }
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadStatus();
+            const refreshBtn = document.getElementById('refreshBtn');
+            if (refreshBtn) refreshBtn.addEventListener('click', () => fetchData(true));
         });
+
     </script>
 </body>
 </html>
