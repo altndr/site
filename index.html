@@ -7,120 +7,110 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --accent: #8b5cf6; }
-        body { background-color: var(--bg); color: #f1f5f9; font-family: ui-sans-serif, system-ui; }
+        body { background-color: var(--bg); color: #f1f5f9; font-family: ui-sans-serif, sans-serif; }
         .stat-card { background: var(--card); border: 1px solid #334155; border-radius: 0.75rem; padding: 1.25rem; }
-        .error-box { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #f87171; padding: 1rem; border-radius: 0.5rem; }
+        .loader { border-top-color: #8b5cf6; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="p-4 sm:p-8">
+<body class="p-6">
 
     <div class="max-w-4xl mx-auto">
-        <header class="text-center mb-10">
-            <h1 class="text-4xl font-extrabold text-white mb-2">Player <span class="text-purple-500">Analytics</span></h1>
-            <p class="text-slate-400">Search for any CraftersMC player to view live network statistics.</p>
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-black text-white italic tracking-tight">PLAYER <span class="text-purple-500">INSIGHTS</span></h1>
         </header>
 
-        <div class="flex gap-2 mb-8">
-            <input type="text" id="usernameInput" placeholder="Minecraft Username" 
-                   class="flex-grow bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-purple-500 transition">
-            <button id="searchBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-6 py-2 rounded-lg transition duration-200">
+        <div class="flex gap-2 mb-8 bg-slate-800 p-2 rounded-xl border border-slate-700 shadow-2xl">
+            <input type="text" id="usernameInput" placeholder="Enter Minecraft Username" 
+                   class="flex-grow bg-transparent px-4 py-2 outline-none text-lg">
+            <button id="searchBtn" class="bg-purple-600 hover:bg-purple-500 text-white font-bold px-8 py-2 rounded-lg transition-all">
                 Search
             </button>
         </div>
 
-        <div id="errorDisplay" class="hidden mb-6"></div>
+        <div id="statusArea" class="hidden text-center py-10">
+            <div class="loader ease-linear rounded-full border-4 border-t-4 border-slate-700 h-12 w-12 mb-4 mx-auto"></div>
+            <p class="text-slate-400 animate-pulse">Querying Network Database...</p>
+        </div>
+        <div id="errorArea" class="hidden bg-red-900/20 border border-red-500 text-red-400 p-4 rounded-lg mb-6 text-sm"></div>
 
         <div id="profileContainer" class="hidden space-y-6">
-            <div class="stat-card flex flex-col sm:flex-row items-center gap-6">
-                <img id="playerAvatar" src="" class="w-24 h-24 rounded-lg bg-slate-700 shadow-xl" alt="Skin">
-                <div class="text-center sm:text-left">
+            <div class="stat-card flex items-center gap-6">
+                <img id="playerAvatar" src="" class="w-24 h-24 rounded-lg bg-slate-900 border border-slate-700 shadow-inner">
+                <div>
                     <h2 id="displayName" class="text-3xl font-bold text-white"></h2>
-                    <p id="playerRank" class="text-purple-400 font-mono font-bold uppercase tracking-wider"></p>
+                    <p id="playerRank" class="text-purple-400 font-mono font-bold uppercase"></p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="stat-card">
-                    <p class="text-slate-400 text-sm font-semibold uppercase">Network Coins</p>
-                    <p id="coinCount" class="text-2xl font-bold text-yellow-500"></p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="stat-card text-center">
+                    <span class="text-slate-400 text-xs font-bold uppercase tracking-widest">Network Coins</span>
+                    <p id="coinCount" class="text-2xl font-black text-yellow-500 mt-1">—</p>
                 </div>
-                <div class="stat-card">
-                    <p class="text-slate-400 text-sm font-semibold uppercase">Total Playtime</p>
-                    <p id="playtime" class="text-2xl font-bold text-blue-400"></p>
+                <div class="stat-card text-center">
+                    <span class="text-slate-400 text-xs font-bold uppercase tracking-widest">Total Playtime</span>
+                    <p id="playtime" class="text-2xl font-black text-blue-400 mt-1">—</p>
                 </div>
-                <div class="stat-card">
-                    <p class="text-slate-400 text-sm font-semibold uppercase">Current Server</p>
-                    <p id="currentServer" class="text-2xl font-bold text-green-400"></p>
+                <div class="stat-card text-center">
+                    <span class="text-slate-400 text-xs font-bold uppercase tracking-widest">Current Status</span>
+                    <p id="currentServer" class="text-2xl font-black text-green-400 mt-1">—</p>
                 </div>
-            </div>
-            
-            <div class="stat-card">
-                <details class="cursor-pointer">
-                    <summary class="font-bold text-slate-300">Advanced JSON Data</summary>
-                    <pre id="rawData" class="mt-4 text-xs bg-black/30 p-4 rounded-md overflow-x-auto text-slate-400"></pre>
-                </details>
             </div>
         </div>
     </div>
 
     <script>
-        const API_KEY = 'd73d6850-17db-4476-b6b6-3a8af022d405';
-        const PROXY = 'https://api.allorigins.win/raw?url=';
+        // UPDATED: Using your worker URL
+        const WORKER_BASE = 'https://api-proxy.craftersmcguides.workers.dev';
 
         async function fetchPlayerData() {
-            const username = document.getElementById('usernameInput').value.trim();
+            const user = document.getElementById('usernameInput').value.trim();
+            if (!user) return;
+
             const container = document.getElementById('profileContainer');
-            const errorDiv = document.getElementById('errorDisplay');
-            const btn = document.getElementById('searchBtn');
+            const status = document.getElementById('statusArea');
+            const error = document.getElementById('errorArea');
 
-            if (!username) return;
-
-            // UI Reset
-            btn.disabled = true;
-            btn.textContent = 'Searching...';
-            errorDiv.classList.add('hidden');
+            // Reset UI
+            status.classList.remove('hidden');
+            error.classList.add('hidden');
             container.classList.add('hidden');
 
-            // According to openapi.json, path is /v1/player/{username}
-            const targetUrl = `https://craftersmc.net/v1/player/${username}`;
-            
             try {
-                const response = await fetch(`${PROXY}${encodeURIComponent(targetUrl)}`, {
-                    headers: { 'X-Web-Key': API_KEY }
-                });
+                // Construct path for the specific worker: WORKER + /player/NAME
+                const response = await fetch(`${WORKER_BASE}/player/${user}`);
 
                 if (!response.ok) {
-                    throw new Error(response.status === 404 ? 'Player not found in database.' : `API Error (${response.status})`);
+                    if (response.status === 520) throw new Error("Worker Error (520): The proxy failed to reach the CraftersMC server.");
+                    if (response.status === 404) throw new Error("Player not found.");
+                    throw new Error(`API returned status ${response.status}`);
                 }
 
                 const data = await response.json();
 
-                // Map UI elements to Player schema properties
+                // Map data based on the openapi.json Player schema
                 document.getElementById('displayName').textContent = data.name;
-                document.getElementById('playerRank').textContent = data.selectedRank || 'DEFAULT';
-                document.getElementById('playerAvatar').src = `https://minotar.net/helm/${username}/128.png`;
+                document.getElementById('playerRank').textContent = data.selectedRank || 'Player';
+                document.getElementById('playerAvatar').src = `https://minotar.net/helm/${user}/128.png`;
                 document.getElementById('coinCount').textContent = (data.networkCoins || 0).toLocaleString();
-                document.getElementById('currentServer').textContent = data.lastServer || 'OFFLINE';
+                document.getElementById('currentServer').textContent = data.lastServer || 'Offline';
                 
                 const hours = Math.floor((data.totalPlaytime || 0) / 3600);
-                document.getElementById('playtime').textContent = `${hours} Hours`;
+                document.getElementById('playtime').textContent = `${hours}h`;
 
-                document.getElementById('rawData').textContent = JSON.stringify(data, null, 2);
-
+                status.classList.add('hidden');
                 container.classList.remove('hidden');
+
             } catch (err) {
-                errorDiv.innerHTML = `<div class="error-box"><strong>Error:</strong> ${err.message}</div>`;
-                errorDiv.classList.remove('hidden');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Search';
+                status.classList.add('hidden');
+                error.textContent = err.message;
+                error.classList.remove('hidden');
             }
         }
 
-        document.getElementById('searchBtn').addEventListener('click', fetchPlayerData);
-        document.getElementById('usernameInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') fetchPlayerData();
-        });
+        document.getElementById('searchBtn').onclick = fetchPlayerData;
+        document.getElementById('usernameInput').onkeypress = (e) => { if(e.key === 'Enter') fetchPlayerData(); };
     </script>
 </body>
 </html>
