@@ -2,446 +2,206 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CraftersCrypt | SkyBlock Stats</title>
+    <title>CraftersCrypt | OpenAPI Status</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root {
-            --bg-dark: #121212;
-            --bg-card: #1e1e1e;
-            --accent: #6c5ce7;
-            --text-main: #e0e0e0;
-        }
-
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .skycrypt-card {
-            background-color: var(--bg-card);
-            border: 1px solid #333;
-            transition: transform 0.2s;
-        }
-        
-        .skycrypt-card:hover {
-            transform: translateY(-2px);
-            border-color: var(--accent);
-        }
-
-        /* Rarity Colors */
-        .rarity-COMMON { color: #fff; }
-        .rarity-UNCOMMON { color: #55ff55; }
-        .rarity-RARE { color: #5555ff; }
-        .rarity-EPIC { color: #aa00aa; }
-        .rarity-LEGENDARY { color: #ffaa00; }
-        .rarity-MYTHIC { color: #ff55ff; }
-
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #121212; }
-        ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+        :root { --bg: #121212; --card: #1e1e1e; --accent: #6c5ce7; }
+        body { background: var(--bg); color: #e0e0e0; font-family: sans-serif; }
+        .kv { display: flex; border-bottom: 1px solid #333; padding: 4px 0; font-family: monospace; font-size: 0.85rem; }
+        .k { font-weight: bold; color: #888; min-width: 160px; }
+        .v { color: #ccc; word-break: break-all; }
+        .nested { margin-left: 15px; border-left: 1px solid #444; padding-left: 10px; }
+        details summary { cursor: pointer; color: var(--accent); list-style: none; }
+        details summary::-webkit-details-marker { display: none; }
+        .games-table { width: 100%; border-collapse: collapse; }
+        .games-table th { text-align: left; border-bottom: 2px solid #444; padding: 8px; }
+        .games-table td { border-bottom: 1px solid #333; padding: 8px; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="p-4 md:p-8">
 
-    <nav class="bg-[#1a1a1a] border-b border-[#333] py-4 sticky top-0 z-50 shadow-md">
-        <div class="container mx-auto px-4 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <img src="https://craftersmc.net/data/assets/logo/newOriginal512.png" alt="Logo" class="h-10 w-10">
-                <h1 class="text-xl font-bold tracking-tight">Crafters<span class="text-[#6c5ce7]">Crypt</span></h1>
-            </div>
-            <div class="hidden md:flex items-center gap-4 text-sm text-gray-400">
-                <span><i class="fas fa-signal"></i> Status: <span class="text-white" id="online-count">Loading...</span></span>
-            </div>
-        </div>
-    </nav>
+    <div class="max-w-4xl mx-auto">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold">Network <span class="text-[#6c5ce7]">Analytics</span></h1>
+            <button id="refreshBtn" class="bg-[#6c5ce7] px-4 py-2 rounded font-bold hover:bg-[#5a4dd1] transition">Refresh</button>
+        </header>
 
-    <header class="bg-[#161616] py-12 border-b border-[#2a2a2a]">
-        <div class="container mx-auto px-4 text-center">
-            <h2 class="text-3xl font-bold mb-6">Check stats for CraftersMC</h2>
-            <div class="max-w-xl mx-auto relative">
-                <input type="text" id="username-input" placeholder="Enter Minecraft Username..." 
-                    class="w-full bg-[#252525] border border-[#444] text-white px-6 py-4 rounded-lg focus:outline-none focus:border-[#6c5ce7] text-lg shadow-lg">
-                <button onclick="initSearch()" class="absolute right-2 top-2 bg-[#6c5ce7] hover:bg-[#5a4dd1] text-white p-2.5 rounded-md transition">
-                    <i class="fas fa-search"></i>
-                </button>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-[#1e1e1e] p-6 rounded-xl border border-[#333]">
+                <div class="text-gray-500 text-xs font-bold uppercase">Online</div>
+                <div id="activePlayers" class="text-3xl font-mono text-white">—</div>
+                <div id="activePlayersSmall" class="text-xs text-gray-500">Max: —</div>
             </div>
-            <div id="error-msg" class="hidden mt-4 bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded max-w-xl mx-auto text-sm text-left"></div>
-        </div>
-    </header>
-
-    <main id="dashboard" class="container mx-auto px-4 py-8 flex-grow hidden">
-        
-        <div class="flex flex-col md:flex-row gap-8 mb-10 items-center md:items-start">
-            <div class="relative group">
-                <img id="player-head" src="" class="w-32 h-32 rounded-lg shadow-2xl border-2 border-[#333]">
-                <div class="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-[#333] px-3 py-1 rounded text-xs font-bold" id="player-rank">RANK</div>
+            <div class="bg-[#1e1e1e] p-6 rounded-xl border border-[#333]">
+                <div class="text-gray-500 text-xs font-bold uppercase">Status</div>
+                <div id="networkStatus" class="text-3xl font-mono text-white">—</div>
+                <div id="plannedMaintenance" class="text-xs text-red-400"></div>
             </div>
-            
-            <div class="flex-grow text-center md:text-left">
-                <h1 id="display-name" class="text-4xl font-bold mb-2">Username</h1>
-                <p class="text-gray-400 mb-4" id="last-seen">Last seen: Online</p>
-                
-                <div class="flex flex-wrap justify-center md:justify-start gap-2" id="profile-tabs"></div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4 text-sm">
-                <div class="bg-[#252525] p-3 rounded text-center min-w-[100px]">
-                    <div class="text-[#6c5ce7] font-bold text-lg" id="net-coins">0</div>
-                    <div class="text-gray-500">Net Coin</div>
-                </div>
-                <div class="bg-[#252525] p-3 rounded text-center min-w-[100px]">
-                    <div class="text-[#ffaa00] font-bold text-lg" id="play-time">0h</div>
-                    <div class="text-gray-500">Playtime</div>
-                </div>
+            <div class="bg-[#1e1e1e] p-6 rounded-xl border border-[#333]">
+                <div class="text-gray-500 text-xs font-bold uppercase">Required Rank</div>
+                <div id="whitelistRank" class="text-xl font-mono text-yellow-500 mt-2">—</div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            <div class="skycrypt-card rounded-xl p-6">
-                <h3 class="text-xl font-bold mb-4 border-b border-[#333] pb-2"><i class="fas fa-coins text-yellow-500 mr-2"></i> Finances</h3>
-                <div class="space-y-4">
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-400">Purse</span>
-                        <span class="font-mono text-xl text-yellow-400" id="stat-purse">0</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-400">Bank Balance</span>
-                        <span class="font-mono text-xl text-green-400" id="stat-bank">0</span>
-                    </div>
-                     <div class="flex justify-between items-center">
-                        <span class="text-gray-400">Bank Account</span>
-                        <span class="text-sm bg-blue-900 text-blue-200 px-2 py-0.5 rounded" id="stat-bank-tier">Basic</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="skycrypt-card rounded-xl p-6">
-                <h3 class="text-xl font-bold mb-4 border-b border-[#333] pb-2"><i class="fas fa-skull text-red-500 mr-2"></i> Slayer</h3>
-                <div class="space-y-4" id="slayer-container">
-                    </div>
-            </div>
-
-             <div class="skycrypt-card rounded-xl p-6">
-                <h3 class="text-xl font-bold mb-4 border-b border-[#333] pb-2"><i class="fas fa-info-circle text-blue-500 mr-2"></i> Details</h3>
-                <div class="space-y-3 text-sm">
-                    <div class="flex justify-between">
-                        <span class="text-gray-400">Profile Age</span>
-                        <span id="stat-age" class="text-white">Unknown</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-400">Gamemode</span>
-                        <span id="stat-gamemode" class="text-white">Normal</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-400">Collection Ranking</span>
-                        <span id="stat-collection" class="text-purple-400">#0</span>
-                    </div>
-                     <div class="mt-4">
-                        <span class="text-gray-400 block mb-2">Active Minions</span>
-                        <div id="minion-list" class="flex flex-wrap gap-1"></div>
-                    </div>
-                </div>
-            </div>
-
+        <div id="detailsContainer" class="bg-[#1e1e1e] p-6 rounded-xl border border-[#333]">
+            <div class="animate-pulse text-gray-500">Initializing...</div>
         </div>
-    </main>
-
-    <footer class="bg-[#1a1a1a] border-t border-[#333] mt-auto py-6">
-        <div class="container mx-auto px-4">
-            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Live Bazaar Prices (Top Items)</h4>
-            <div class="flex gap-4 overflow-x-auto pb-2" id="bazaar-ticker">
-                <div class="text-sm text-gray-500">Loading Bazaar data...</div>
-            </div>
-        </div>
-    </footer>
+    </div>
 
     <script>
-        // --- CONFIGURATION ---
-        // CORS Proxy is used to bypass browser restrictions on local files
         const PROXY = 'https://corsproxy.io/?';
-        const API_BASE = 'https://craftersmc.net/v1/'; 
-        const API_KEY = 'd73d6850-17db-4476-b6b6-3a8af022d405';
+        const API_PATH = `${PROXY}${encodeURIComponent('https://craftersmc.net/v1/network/status')}`;
+        const CACHE_KEY = 'network-status-cache';
+        const TTL = 60 * 1000;
 
-        const HEADERS = {
-            'Content-Type': 'application/json',
-            'X-Web-Key': API_KEY, // Sending key in multiple standard formats
-            'Authorization': `Bearer ${API_KEY}`
-        };
+        // --- Logic provided by you, updated for CraftersMC Schema ---
 
-        // --- UTILITIES ---
-        const formatNumber = (num) => {
-            if (!num) return '0';
-            return new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(num);
-        };
-        
-        const showError = (msg, details = "") => {
-            const box = document.getElementById('error-msg');
-            box.innerHTML = `<strong>Error:</strong> ${msg} <br/><span class="text-xs text-red-300 opacity-75">${details}</span>`;
-            box.classList.remove('hidden');
-            console.error(msg, details);
-        };
+        function renderKV(container, obj) {
+            container.innerHTML = '';
+            for (const [k, v] of Object.entries(obj)) {
+                const row = document.createElement('div');
+                row.className = 'kv';
+                const key = document.createElement('div'); key.className = 'k'; key.textContent = k;
+                const val = document.createElement('div'); val.className = 'v';
 
-        // --- API CALLS ---
-
-        async function fetchStatus() {
-            try {
-                // Using proxy for status too
-                const res = await fetch(`${PROXY}${encodeURIComponent(API_BASE + '/v1/network/status')}`, { headers: HEADERS });
-                const data = await res.json();
-                if (data.playerCount !== undefined) {
-                    document.getElementById('online-count').innerHTML = 
-                        `${data.playerCount.toLocaleString()} / ${data.maxPlayerCount.toLocaleString()}`;
-                }
-            } catch (e) {
-                console.warn("Status fetch failed", e);
-                document.getElementById('online-count').innerText = "Offline / API Unreachable";
+                if (v === null) { val.textContent = 'null'; }
+                else if (typeof v === 'object') {
+                    const details = document.createElement('details');
+                    const summary = document.createElement('summary'); 
+                    summary.textContent = Array.isArray(v) ? `Array(${v.length})` : 'Object';
+                    const inner = document.createElement('div'); inner.className = 'nested';
+                    if (Array.isArray(v)) {
+                        v.forEach((item, i) => {
+                            const sub = document.createElement('details');
+                            const su = document.createElement('summary'); su.textContent = `Item ${i}`;
+                            const ic = document.createElement('div'); ic.className = 'details-content';
+                            if (typeof item === 'object') { renderKV(ic, item); } 
+                            else { ic.textContent = String(item); }
+                            sub.appendChild(su); sub.appendChild(ic); inner.appendChild(sub);
+                        });
+                    } else { renderKV(inner, v); }
+                    details.appendChild(summary); details.appendChild(inner);
+                    val.appendChild(details);
+                } else { val.textContent = String(v); }
+                row.appendChild(key); row.appendChild(val);
+                container.appendChild(row);
             }
         }
 
-        async function fetchBazaar() {
-            try {
-                const res = await fetch(`${PROXY}${encodeURIComponent(API_BASE + '/v1/skyblock/bazaar/items')}`, { headers: HEADERS });
-                if(!res.ok) return;
-                const data = await res.json();
-                
-                const ticker = document.getElementById('bazaar-ticker');
-                ticker.innerHTML = '';
-                
-                // Fetch first 6 items for the ticker
-                const itemsToFetch = data.values ? data.values.slice(0, 6) : [];
-                
-                for(const itemId of itemsToFetch) {
-                    const detailUrl = `${API_BASE}/v1/skyblock/bazaar/${itemId}/details`;
-                    const detailRes = await fetch(`${PROXY}${encodeURIComponent(detailUrl)}`, { headers: HEADERS });
-                    const details = await detailRes.json();
+        // Adapted flattenGames to handle the "modes" object inside GameCount
+        function flattenGames(games) {
+            const rows = [];
+            // Numeric keys found in ServerStatusResponse schemas
+            const numericKeys = ['playerCount', 'count', 'value', 'online'];
+
+            function recurse(obj, prefix = '') {
+                for (const [k, v] of Object.entries(obj)) {
+                    const currentKey = prefix ? `${prefix}.${k}` : k;
+                    if (v === null) continue;
                     
-                    if(details.buyTopEntries && details.buyTopEntries.length > 0) {
-                        const price = details.buyTopEntries[0].price;
-                        const card = document.createElement('div');
-                        card.className = 'bg-[#111] border border-[#333] px-3 py-2 rounded min-w-[140px] flex flex-col shrink-0';
-                        card.innerHTML = `
-                            <span class="text-xs font-bold text-gray-400 truncate w-full">${itemId.replace(/_/g, ' ')}</span>
-                            <span class="text-yellow-400 font-mono">${formatNumber(price)} coins</span>
-                        `;
-                        ticker.appendChild(card);
+                    // Direct number check
+                    if (typeof v === 'number') {
+                        rows.push({ key: currentKey, label: k, value: v });
+                        continue;
                     }
-                }
-            } catch (e) {
-                console.warn("Bazaar fetch failed", e);
-                document.getElementById('bazaar-ticker').innerHTML = '<span class="text-red-500 text-xs">Failed to load Bazaar.</span>';
-            }
-        }
-
-        // --- MAIN LOGIC ---
-
-        async function initSearch() {
-            const username = document.getElementById('username-input').value.trim();
-            const errorBox = document.getElementById('error-msg');
-            const dashboard = document.getElementById('dashboard');
-            
-            if (!username) return;
-
-            // Reset UI
-            errorBox.classList.add('hidden');
-            dashboard.classList.add('hidden');
-
-            try {
-                // 1. Get Real UUID (Crucial for finding the correct profile member)
-                // We use Ashcon's API because CraftersMC API endpoint /v1/player doesn't explicitly return UUID in the root
-                let uuid = "";
-                try {
-                    const uuidRes = await fetch(`https://api.ashcon.app/mojang/v2/user/${username}`);
-                    if(uuidRes.ok) {
-                        const uuidData = await uuidRes.json();
-                        uuid = uuidData.uuid.replace(/-/g, ""); // Remove dashes for matching
-                    } else {
-                        throw new Error("Could not resolve UUID");
-                    }
-                } catch(e) {
-                    showError("Could not verify username with Mojang.", "Trying fallback...");
-                    // Fallback: We proceed without UUID and try to guess later
-                }
-
-                // 2. Get CraftersMC Player Data
-                const playerUrl = `${API_BASE}/v1/player/${username}`;
-                const playerRes = await fetch(`${PROXY}${encodeURIComponent(playerUrl)}`, { headers: HEADERS });
-                
-                if (playerRes.status === 404) throw new Error("Player not found on CraftersMC.");
-                if (playerRes.status === 403) throw new Error("API Key Invalid or Access Denied.");
-                if (!playerRes.ok) throw new Error(`API Error: ${playerRes.status}`);
-                
-                const playerData = await playerRes.json();
-
-                // Fill Global Header Data
-                document.getElementById('display-name').innerText = playerData.name;
-                document.getElementById('player-rank').innerText = playerData.selectedRank || "DEFAULT";
-                document.getElementById('player-head').src = `https://mc-heads.net/avatar/${playerData.name}`;
-                document.getElementById('last-seen').innerText = `Last Login: ${new Date(playerData.lastLogin).toLocaleDateString()}`;
-                document.getElementById('net-coins').innerText = formatNumber(playerData.networkCoins || 0);
-                
-                // Calculate Playtime (Total millis -> hours)
-                const hours = Math.floor((playerData.totalPlaytime || 0) / (1000 * 60 * 60));
-                document.getElementById('play-time').innerText = `${hours}h`;
-
-                // 3. Handle SkyBlock Profiles
-                const sbStats = playerData.stats?.skyBlock;
-                const profileTabs = document.getElementById('profile-tabs');
-                profileTabs.innerHTML = '';
-
-                if (sbStats && sbStats.profiles) {
-                    const profileIds = Object.keys(sbStats.profiles);
                     
-                    profileIds.forEach((pid, index) => {
-                        const pStub = sbStats.profiles[pid];
-                        const btn = document.createElement('button');
-                        const isDefault = index === 0; 
-                        
-                        btn.className = `px-4 py-2 rounded font-bold text-sm transition border border-transparent ${isDefault ? 'bg-[#6c5ce7] text-white' : 'bg-[#333] text-gray-400 hover:bg-[#444]'}`;
-                        btn.innerText = pStub.cuteName || "Unknown";
-                        btn.onclick = () => loadProfile(pid, uuid, btn);
-                        
-                        profileTabs.appendChild(btn);
-
-                        if (isDefault) loadProfile(pid, uuid, btn);
-                    });
-                } else {
-                    showError("This player has no SkyBlock profiles.");
-                }
-
-                dashboard.classList.remove('hidden');
-
-            } catch (e) {
-                showError(e.message, "Check the console (F12) for network details.");
-            }
-        }
-
-        async function loadProfile(profileId, playerUUID, btnElement) {
-            // Update Tab Styling
-            const tabs = document.getElementById('profile-tabs').children;
-            for(let tab of tabs) {
-                tab.className = 'px-4 py-2 rounded font-bold text-sm transition bg-[#333] text-gray-400 hover:bg-[#444] border border-transparent';
-            }
-            btnElement.className = 'px-4 py-2 rounded font-bold text-sm transition bg-[#6c5ce7] text-white border border-[#5a4dd1]';
-
-            try {
-                // Fetch full profile data
-                const profileUrl = `${API_BASE}/v1/skyblock/profile/${profileId}`;
-                const res = await fetch(`${PROXY}${encodeURIComponent(profileUrl)}`, { headers: HEADERS });
-                const data = await res.json();
-
-                // Find the member object that matches our player
-                let member = null;
-                const members = data.members || {};
-                
-                // If we successfully got the UUID from step 1, use it.
-                if(playerUUID && members[playerUUID]) {
-                    member = members[playerUUID];
-                } else if (playerUUID && members[formatUUIDWithDashes(playerUUID)]) {
-                     member = members[formatUUIDWithDashes(playerUUID)];
-                } else {
-                    // Fallback: If we couldn't resolve UUID, just take the first member (Last Resort)
-                    // or try to find one that matches the owner ID if applicable
-                    if(data.ownerUniqueId && members[data.ownerUniqueId]) {
-                        member = members[data.ownerUniqueId];
-                    } else {
-                        const firstKey = Object.keys(members)[0];
-                        member = members[firstKey];
+                    if (typeof v === 'object') {
+                        // Check if this is a GameCount object containing 'modes'
+                        if (k === 'modes' || v.modes) {
+                            recurse(v.modes || v, currentKey);
+                        } else {
+                            let found = null;
+                            for (const nk of numericKeys) {
+                                if (nk in v && typeof v[nk] === 'number') {
+                                    found = v[nk]; break;
+                                }
+                            }
+                            if (found !== null) { rows.push({ key: currentKey, label: k, value: found }); } 
+                            else { recurse(v, currentKey); }
+                        }
                     }
                 }
-
-                if (!member) {
-                    console.error("Member not found in profile");
-                    return;
-                }
-
-                // --- POPULATE DASHBOARD ---
-
-                // 1. Finances
-                document.getElementById('stat-purse').innerText = formatNumber(member.coinPurse || 0);
-                document.getElementById('stat-bank').innerText = formatNumber(data.banking?.balance || 0);
-                document.getElementById('stat-bank-tier').innerText = (data.banking?.tier || "BASIC").replace(/_/g, ' ');
-
-                // 2. Details
-                document.getElementById('stat-age').innerText = new Date(data.createdAt).toLocaleDateString();
-                document.getElementById('stat-gamemode').innerText = data.gameMode || "Normal";
-                document.getElementById('stat-collection').innerText = "#" + (member.miningMilestone || "0");
-
-                // 3. Slayer
-                const slayerContainer = document.getElementById('slayer-container');
-                slayerContainer.innerHTML = '';
-                const slayerData = member.slayerData;
-                
-                if (slayerData) {
-                    const slayers = [
-                        { name: "Zombie", lvl: slayerData.zombieTier, kills: slayerData.killedZombieSlayer, color: "text-red-400" },
-                        { name: "Spider", lvl: slayerData.spiderTier, kills: slayerData.killedSpiderSlayer, color: "text-red-400" },
-                        { name: "Wolf", lvl: slayerData.wolfTier, kills: slayerData.killedWolfSlayer, color: "text-red-400" }
-                    ];
-
-                    slayers.forEach(s => {
-                        const row = document.createElement('div');
-                        row.className = "flex justify-between items-center bg-[#222] p-2 rounded border border-[#333]";
-                        row.innerHTML = `
-                            <span class="font-bold ${s.color}">${s.name}</span>
-                            <div class="text-right">
-                                <div class="font-bold text-white">Lvl ${s.lvl || 0}</div>
-                                <div class="text-xs text-gray-500">${formatNumber(s.kills || 0)} kills</div>
-                            </div>
-                        `;
-                        slayerContainer.appendChild(row);
-                    });
-                } else {
-                    slayerContainer.innerHTML = '<div class="text-gray-500 text-sm">No Slayer data available</div>';
-                }
-
-                // 4. Minions
-                const minionList = document.getElementById('minion-list');
-                minionList.innerHTML = '';
-                if(data.craftedMinions && data.craftedMinions.length > 0) {
-                   data.craftedMinions.slice(0, 8).forEach(m => {
-                       const span = document.createElement('span');
-                       span.className = "bg-[#2a2a2a] text-xs px-2 py-1 rounded text-gray-300 border border-[#333]";
-                       span.innerText = m.replace(/_/g, " ").replace("GENERATOR", "").toLowerCase();
-                       minionList.appendChild(span);
-                   });
-                   if(data.craftedMinions.length > 8) {
-                       const more = document.createElement('span');
-                       more.className = "text-xs text-gray-500 py-1 pl-1";
-                       more.innerText = `+${data.craftedMinions.length - 8} more`;
-                       minionList.appendChild(more);
-                   }
-                } else {
-                    minionList.innerText = "No minions crafted.";
-                }
-
-            } catch (e) {
-                console.error("Profile load error", e);
-                showError("Failed to load profile details.", e.message);
             }
+            recurse(games);
+            return rows;
         }
 
-        // Helper to handle UUID formats
-        function formatUUIDWithDashes(uuid) {
-            if (uuid.length === 32) {
-                return `${uuid.substr(0, 8)}-${uuid.substr(8, 4)}-${uuid.substr(12, 4)}-${uuid.substr(16, 4)}-${uuid.substr(20)}`;
-            }
-            return uuid;
-        }
+        function buildGamesTable(games) {
+            const table = document.createElement('table');
+            table.className = 'games-table';
+            table.innerHTML = '<thead><tr><th>Server Mode</th><th>Players</th></tr></thead>';
+            const tbody = document.createElement('tbody');
+            const rows = flattenGames(games);
 
-        // Initialize
-        window.onload = () => {
-            fetchStatus();
-            fetchBazaar();
-            
-            // Allow Enter key
-            document.getElementById('username-input').addEventListener("keypress", function(event) {
-                if (event.key === "Enter") initSearch();
+            rows.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td class="font-mono text-sm">${r.key.replace('games.', '')}</td><td class="font-bold text-[#6c5ce7]">${r.value}</td>`;
+                tbody.appendChild(tr);
             });
-        };
+            table.appendChild(tbody);
+            return table;
+        }
+
+        async function applyData(data) {
+            // Fields from ServerStatusResponse
+            document.getElementById('activePlayers').textContent = data.playerCount ?? '—';
+            document.getElementById('activePlayersSmall').textContent = `Max: ${data.maxPlayerCount ?? '—'}`;
+            document.getElementById('networkStatus').textContent = data.fullMaintenance ? 'MAINTENANCE' : 'ONLINE';
+            document.getElementById('networkStatus').className = data.fullMaintenance ? 'text-3xl font-mono text-red-500' : 'text-3xl font-mono text-green-400';
+            document.getElementById('whitelistRank').textContent = data.whitelistRank ?? 'NONE';
+
+            if (data.plannedMaintenance) {
+                document.getElementById('plannedMaintenance').textContent = `Maint: ${data.plannedMaintenance.reason || 'Scheduled'}`;
+            }
+
+            const container = document.getElementById('detailsContainer');
+            container.innerHTML = '<h2 class="text-lg font-bold mb-4">Distribution</h2>';
+
+            if (data.games) {
+                const gamesDetails = document.createElement('details');
+                gamesDetails.open = true;
+                const summary = document.createElement('summary'); summary.textContent = 'Server List';
+                const inner = document.createElement('div');
+                inner.appendChild(buildGamesTable(data.games));
+                gamesDetails.appendChild(summary); gamesDetails.appendChild(inner);
+                container.appendChild(gamesDetails);
+            }
+
+            const rawDetails = document.createElement('details');
+            rawDetails.className = "mt-6 border-t border-[#333] pt-4";
+            const rs = document.createElement('summary'); rs.textContent = 'Full Response Explorer (renderKV)';
+            const content = document.createElement('div');
+            renderKV(content, data);
+            rawDetails.appendChild(rs); rawDetails.appendChild(content);
+            container.appendChild(rawDetails);
+        }
+
+        // --- Cache and Fetch Wrapper ---
+
+        async function fetchData() {
+            const btn = document.getElementById('refreshBtn');
+            btn.disabled = true; btn.textContent = '...';
+            try {
+                const resp = await fetch(API_PATH);
+                const data = await resp.json();
+                localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data }));
+                applyData(data);
+            } catch (e) {
+                console.error(e);
+                const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
+                if (cached) applyData(cached.data);
+            } finally {
+                btn.disabled = false; btn.textContent = 'Refresh';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
+            if (cached && (Date.now() - cached.ts < TTL)) applyData(cached.data);
+            else fetchData();
+            document.getElementById('refreshBtn').onclick = fetchData;
+        });
     </script>
 </body>
 </html>
