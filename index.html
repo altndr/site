@@ -65,13 +65,13 @@ async function fetchFullProfile() {
     display.style.display = "none";
 
     try {
-        // 1. Get basic player info to find the UUID (pixelId) and active Profile ID
+        // 1. Get basic player info
         const playerRes = await fetch(`${WORKER_URL}/v1/player/${username}`);
         if (!playerRes.ok) throw new Error("Player not found");
         const playerData = await playerRes.json();
         
-        // pixelId is the UUID needed to look up the member in the next step
-        const uuid = playerData.pixelId; 
+        // FIX: Remove dashes from UUID to match SkyBlock member keys
+        const uuid = playerData.pixelId.replace(/-/g, ""); 
         const activeProfileId = playerData.stats.skyBlock.profileId;
 
         // 2. Get the specific SkyBlock Profile
@@ -79,14 +79,15 @@ async function fetchFullProfile() {
         if (!sbRes.ok) throw new Error("Profile not found");
         const sbData = await sbRes.json();
 
-        // 3. IMPORTANT: Access the member using the UUID as the key
+        // 3. Access member data using the trimmed UUID
         const memberData = sbData.members[uuid];
         
         if (!memberData) {
-            throw new Error("Could not find member data for this UUID in the profile.");
+            console.log("Available UUIDs in profile:", Object.keys(sbData.members));
+            console.log("Looking for trimmed UUID:", uuid);
+            throw new Error("Member data not found for this profile.");
         }
 
-        // 4. Update the Page
         renderUI(playerData.name, sbData.cuteName, memberData);
 
     } catch (err) {
@@ -100,14 +101,13 @@ async function fetchFullProfile() {
 function renderUI(user, profileName, member) {
     document.getElementById('profileDisplay').style.display = "block";
     document.getElementById('dispUser').innerText = user;
-    
-    // cuteName is the 'Cucumber' or 'Apple' profile name
     document.getElementById('dispProfile').innerText = profileName || "Unknown";
 
     const skillsDiv = document.getElementById('skillsContainer');
     skillsDiv.innerHTML = '';
 
-    // Extracting levels based on the SkyBlockProfileMember schema
+    // The API schema shows 'level' and 'exp' are top-level member properties
+    // Skill levels are nested in the 'skills' object
     const stats = [
         { name: 'SkyBlock Level', value: member.level || 0 },
         { name: 'Combat', value: member.skills?.combat?.level || 0 },
@@ -123,7 +123,6 @@ function renderUI(user, profileName, member) {
         `;
     });
 }
-
 </script>
 
 </body>
