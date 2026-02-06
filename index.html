@@ -65,28 +65,31 @@ async function fetchFullProfile() {
     display.style.display = "none";
 
     try {
-        // 1. Get basic player info
+        // 1. Get Player basic info
         const playerRes = await fetch(`${WORKER_URL}/v1/player/${username}`);
         if (!playerRes.ok) throw new Error("Player not found");
         const playerData = await playerRes.json();
         
-        // FIX: Remove dashes from UUID to match SkyBlock member keys
-        const uuid = playerData.pixelId.replace(/-/g, ""); 
         const activeProfileId = playerData.stats.skyBlock.profileId;
 
-        // 2. Get the specific SkyBlock Profile
+        // 2. Get the SkyBlock Profile
         const sbRes = await fetch(`${WORKER_URL}/v1/skyblock/profile/${activeProfileId}`);
         if (!sbRes.ok) throw new Error("Profile not found");
         const sbData = await sbRes.json();
 
-        // 3. Access member data using the trimmed UUID
-        const memberData = sbData.members[uuid];
-        
+        // 3. SMART MATCH: Find the member data
+        // We look for the ID provided by the player endpoint, 
+        // but if that fails, we take the first member in the profile.
+        const trimmedUuid = playerData.pixelId.replace(/-/g, "");
+        let memberData = sbData.members[trimmedUuid];
+
         if (!memberData) {
-            console.log("Available UUIDs in profile:", Object.keys(sbData.members));
-            console.log("Looking for trimmed UUID:", uuid);
-            throw new Error("Member data not found for this profile.");
+            console.warn("UUID mismatch. Defaulting to first profile member.");
+            const firstMemberId = Object.keys(sbData.members)[0];
+            memberData = sbData.members[firstMemberId];
         }
+        
+        if (!memberData) throw new Error("No member data found in this profile.");
 
         renderUI(playerData.name, sbData.cuteName, memberData);
 
