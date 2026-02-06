@@ -83,9 +83,12 @@ function initSkin(skinUrl) {
   viewer.animation = new skinview3d.WalkingAnimation();
   viewer.camera.position.set(0, 0, 75);
 
-  window.addEventListener("resize", () => {
+window.addEventListener("resize", () => {
+  // Only resize if the container is actually visible
+  if (container.clientWidth > 0) {
     viewer.setSize(container.clientWidth, container.clientHeight);
-  });
+  }
+});
 }
 </script>
 
