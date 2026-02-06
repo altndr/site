@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:,">
     <title>CraftersMC Stats</title>
     <style>
         :root {
@@ -100,6 +101,7 @@
             width: 64px;
             height: 64px;
             border-radius: 5px;
+            background-color: #000; /* Placeholder if image fails */
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
 
@@ -219,7 +221,7 @@
 
     <div id="profile-display">
         <div class="header-card">
-            <img id="player-head-img" class="player-head" src="" alt="Head">
+            <img id="player-head-img" class="player-head" src="https://crafatar.com/avatars/MHF_Steve?overlay" alt="Head">
             <div class="header-text">
                 Stats for <span id="display-name" class="highlight"></span> on 
                 <div class="profile-selector-container">
@@ -275,7 +277,7 @@
     // State management
     let currentPlayer = {
         name: "",
-        uuid: "", // We might need to fetch this from a Mojang proxy if not in API
+        uuid: null, 
         profiles: {} // Map of profileId -> cuteName
     };
 
@@ -320,23 +322,22 @@
                 throw new Error("This player has not played SkyBlock.");
             }
 
-            // 2. Fetch UUID (Need strictly for identifying member in profile)
-            // CraftersMC /player endpoint schema doesn't strictly show UUID, 
-            // so we fetch from Ashcon (Mojang proxy) to be safe and get the face.
-            const mojangRes = await fetch(`https://api.ashcon.app/mojang/v2/user/${username}`);
-            const mojangData = await mojangRes.json();
-
             currentPlayer.name = data.name;
-            currentPlayer.uuid = mojangData.uuid; // Dashed UUID usually
-            currentPlayer.undashedUuid = mojangData.uuid.replace(/-/g, '');
-            currentPlayer.profiles = data.stats.skyBlock.profiles; // { "id": { "cuteName": "Apple" } } 
+            // Capture UUID if the server returns it, otherwise null
+            currentPlayer.uuid = data.uuid || data.id || null; 
+            currentPlayer.profiles = data.stats.skyBlock.profiles;
             
             // Set Header Info
             document.getElementById('display-name').innerText = currentPlayer.name;
-            document.getElementById('player-head-img').src = `https://crafatar.com/avatars/${currentPlayer.uuid}?overlay`;
+            
+            // Try to set face if UUID is present, otherwise keep generic
+            if (currentPlayer.uuid) {
+                document.getElementById('player-head-img').src = `https://crafatar.com/avatars/${currentPlayer.uuid}?overlay`;
+            } else {
+                 // Fallback image if needed, though HTML defaults to Steve
+            }
 
             // 3. Determine last active profile or default to first
-            // The API schema has `stats.skyBlock.profileId` which is likely the active one
             let activeProfileId = data.stats.skyBlock.profileId;
             
             // Fallback if null
@@ -420,17 +421,27 @@
             
             const profileData = await response.json();
             
-            // Find the specific member object using UUID
-            // CraftersMC API likely uses undashed UUIDs for keys
-            let member = profileData.members[currentPlayer.undashedUuid];
+            // --- Member Finding Logic ---
+            let member = null;
             
-            // Fallback: Try dashed UUID if undashed fails
+            // Strategy 1: If we have a UUID from step 1, try to find it (dashed or undashed)
+            if (currentPlayer.uuid) {
+                 member = profileData.members[currentPlayer.uuid] || 
+                          profileData.members[currentPlayer.uuid.replace(/-/g, '')];
+            }
+
+            // Strategy 2: If we still don't have a member (because no UUID or UUID mismatch),
+            // just take the FIRST member in the list. This fixes the crash for cracked/offline players.
             if (!member) {
-                member = profileData.members[currentPlayer.uuid];
+                const memberKeys = Object.keys(profileData.members);
+                if (memberKeys.length > 0) {
+                    member = profileData.members[memberKeys[0]];
+                    // Optional: You could console.log that we guessed the member
+                    console.log("Using first member found:", memberKeys[0]);
+                }
             }
 
             if (!member) {
-                // Should not happen if logic is correct
                 throw new Error("Player member data not found in this profile.");
             }
 
@@ -447,7 +458,6 @@
         document.getElementById('stat-gamemode').innerText = profile.gameMode || "Normal";
         
         // --- Economy ---
-        // Purse is stored on the member object
         document.getElementById('stat-purse').innerText = formatNumber(member.coinPurse || 0);
         
         // Bank is usually shared in profile.banking
@@ -458,8 +468,6 @@
         }
 
         // --- Armor ---
-        // Note: Armor is usually base64 encoded NBT. 
-        // We just check if it exists for this demo.
         if (member.armorContents) {
             document.getElementById('armor-display').innerText = "Equipped";
             document.getElementById('armor-display').style.color = "#66fcf1";
@@ -469,7 +477,6 @@
         }
 
         // --- Slayers ---
-        // Data is in member.slayerData
         if (member.slayerData) {
             document.getElementById('slayer-zombie').innerText = "Lvl " + (member.slayerData.zombieTier || 0);
             document.getElementById('slayer-spider').innerText = "Lvl " + (member.slayerData.spiderTier || 0);
