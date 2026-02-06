@@ -2,173 +2,145 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CraftersMC | Dashboard</title>
-    <link rel="icon" href="data:,">
+    <title>CraftersMC | SkyStats</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg: #0f172a;
-            --card: #1e293b;
-            --accent: #38bdf8;
-            --text: #f1f5f9;
-            --success: #22c55e;
-        }
-        body { 
-            font-family: 'Inter', system-ui, sans-serif; 
-            background-color: var(--bg); 
-            color: var(--text); 
-            margin: 0; 
-            padding: 40px 20px; 
-        }
-        .container { max-width: 900px; margin: auto; }
+        :root { --bg: #121212; --card: #1e1e1e; --accent: #55ff55; --rarity-common: #ffffff; --rarity-rare: #5555ff; --rarity-epic: #aa00aa; --rarity-legendary: #ffaa00; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: #e0e0e0; margin: 0; padding: 20px; }
+        .dashboard-font { font-family: 'VT323', monospace; }
+        .container { max-width: 1100px; margin: auto; }
         
-        .header { text-align: center; margin-bottom: 40px; }
-        .header h1 { font-size: 2.5rem; margin-bottom: 10px; color: var(--accent); }
-        
-        .grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
-        
-        .card { 
-            background: var(--card); 
-            padding: 24px; 
-            border-radius: 16px; 
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-        }
+        /* Header & Search */
+        .search-box { display: flex; gap: 10px; margin-bottom: 30px; }
+        input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #333; background: #252525; color: white; font-size: 1.1rem; }
+        button { padding: 12px 24px; background: var(--accent); color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            background: rgba(34, 197, 94, 0.2);
-            color: var(--success);
-            font-weight: 600;
-            font-size: 0.875rem;
-        }
-
-        .input-group { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
-        input { 
-            padding: 12px; 
-            border-radius: 8px; 
-            border: 1px solid #334155; 
-            background: #0f172a; 
-            color: white; 
-            font-size: 1rem;
-        }
-        button { 
-            padding: 12px; 
-            background: var(--accent); 
-            color: #000; 
-            border: none; 
-            border-radius: 8px; 
-            font-weight: 700; 
-            cursor: pointer; 
-            transition: transform 0.1s;
-        }
-        button:active { transform: scale(0.98); }
-
-        pre { 
-            background: #000; 
-            padding: 15px; 
-            border-radius: 8px; 
-            overflow-x: auto; 
-            font-size: 13px; 
-            border: 1px solid #334155;
-            color: #818cf8;
-        }
+        /* Profile Layout */
+        .grid { display: grid; grid-template-columns: 300px 1fr; gap: 20px; }
+        .card { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid #333; }
         
-        .loader { color: #94a3b8; font-style: italic; }
-        
-        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+        /* Avatar & Identity */
+        .player-head { width: 128px; height: 128px; image-rendering: pixelated; display: block; margin: 0 auto 15px; border: 4px solid #333; }
+        .rank-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; margin-bottom: 10px; }
+
+        /* Stats & Skills */
+        .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #2a2a2a; padding-bottom: 4px; }
+        .skill-bar { height: 8px; background: #111; border-radius: 4px; margin-top: 5px; overflow: hidden; }
+        .skill-progress { height: 100%; background: var(--accent); width: 0%; transition: width 1s; }
+
+        /* Inventory Slots */
+        .inventory-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; margin-top: 20px; }
+        .slot { width: 100%; aspect-ratio: 1/1; background: #333; border: 2px solid #1a1a1a; border-radius: 4px; display: flex; align-items: center; justify-content: center; position: relative; cursor: help; }
+        .slot:hover { background: #444; }
+        .slot img { width: 70%; }
+
+        .hidden { display: none; }
+        #loading { text-align: center; font-size: 1.5rem; margin-top: 50px; color: var(--accent); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header">
-        <h1>CraftersMC Dashboard</h1>
-        <p>Real-time data via Cloudflare Workers</p>
+    <div class="search-box">
+        <input type="text" id="usernameInput" placeholder="Enter Minecraft Username...">
+        <button onclick="loadProfile()">VIEW PROFILE</button>
     </div>
 
-    <div class="grid">
-        <div class="card">
-            <h3>Network Status</h3>
-            <div id="statusContent">
-                <p class="loader">Connecting to worker...</p>
-            </div>
-            
-            <hr style="border: 0; border-top: 1px solid #334155; margin: 20px 0;">
-            
-            <h3>Player Lookup</h3>
-            <div class="input-group">
-                <input type="text" id="username" placeholder="Username...">
-                <button id="searchBtn">Search Profile</button>
-            </div>
-        </div>
+    <div id="loading" class="hidden dashboard-font">ACCESSING ARCHIVES...</div>
 
-        <div class="card">
-            <h3>API Output</h3>
-            <div id="outputContainer">
-                <p style="color: #64748b;">Enter a username to see player statistics, ranks, and server data.</p>
-                <pre id="jsonOutput" style="display: none;"></pre>
+    <div id="mainDisplay" class="hidden">
+        <div class="grid">
+            <div class="card">
+                <img id="pHead" class="player-head" src="">
+                <div style="text-align: center;">
+                    <div id="pRank" class="rank-tag" style="background: #aaa; color: #000;">DEFAULT</div>
+                    <h2 id="pName" class="dashboard-font" style="margin: 5px 0; font-size: 2rem;">Username</h2>
+                </div>
+                
+                <div style="margin-top: 25px;">
+                    <h3 class="dashboard-font">GENERAL STATS</h3>
+                    <div class="stat-row"><span>Level</span> <span id="sLevel" class="dashboard-font" style="color:var(--accent)">0</span></div>
+                    <div class="stat-row"><span>Purse</span> <span id="sPurse" style="color:#ffaa00">0</span></div>
+                    <div class="stat-row"><span>Bank</span> <span id="sBank" style="color:#ffaa00">0</span></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="dashboard-font">ARMOR & EQUIPMENT</h3>
+                <div class="inventory-grid" id="armorSlots" style="grid-template-columns: repeat(4, 1fr); max-width: 200px;">
+                    </div>
+
+                <h3 class="dashboard-font" style="margin-top: 30px;">INVENTORY</h3>
+                <div class="inventory-grid" id="invSlots">
+                    </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // YOUR WORKER URL (No /v1 at the end here, we'll add it in the fetch)
-    const WORKER_URL = "https://nameless-disk-9baf.skyblock.workers.dev";
+    const WORKER = "https://nameless-disk-9baf.skyblock.workers.dev";
 
-    // 1. Fetch Network Status
-    async function getNetworkStatus() {
-        const container = document.getElementById('statusContent');
+    async function loadProfile() {
+        const user = document.getElementById('usernameInput').value.trim();
+        if(!user) return;
+
+        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('mainDisplay').classList.add('hidden');
+
         try {
-            const response = await fetch(`${WORKER_URL}/v1/network/status`);
-            const data = await response.json();
+            // 1. GET PLAYER UUID & PROFILE ID
+            const pRes = await fetch(`${WORKER}/v1/player/${user}`);
+            const pData = await pRes.json();
             
-            container.innerHTML = `
-                <div class="status-badge">ONLINE</div>
-                <p style="margin-top:15px">
-                    <strong>Players:</strong> ${data.playerCount} / ${data.maxPlayerCount}
-                </p>
-            `;
-        } catch (err) {
-            container.innerHTML = `<p style="color: #ef4444;">Error connecting to worker.</p>`;
-            console.error(err);
+            // From schema: player.stats.skyBlock.profileId
+            const activeProfileId = pData.stats.skyBlock.profileId;
+            const uuid = pData.pixelId || ""; 
+
+            // 2. GET FULL SKYBLOCK PROFILE
+            const sbRes = await fetch(`${WORKER}/v1/skyblock/profile/${activeProfileId}`);
+            const sbData = await sbRes.json();
+            
+            // Get the member data for the player (keys are UUIDs)
+            const member = sbData.members[Object.keys(sbData.members)[0]];
+
+            updateUI(pData, member, uuid);
+        } catch (e) {
+            alert("Error: " + e.message);
+        } finally {
+            document.getElementById('loading').classList.add('hidden');
         }
     }
 
-    // 2. Fetch Player Data
-    async function fetchPlayer() {
-        const username = document.getElementById('username').value.trim();
-        const output = document.getElementById('jsonOutput');
+    function updateUI(player, member, uuid) {
+        document.getElementById('mainDisplay').classList.remove('hidden');
         
-        if (!username) return;
+        // Identity
+        document.getElementById('pName').innerText = player.name;
+        document.getElementById('pHead').src = `https://crafatar.com/avatars/${uuid}?overlay`;
+        document.getElementById('pRank').innerText = player.selectedRank;
+        
+        // Basic Stats
+        document.getElementById('sLevel').innerText = member.level || 0;
+        document.getElementById('sPurse').innerText = Math.floor(member.coinPurse || 0).toLocaleString();
+        document.getElementById('sBank').innerText = Math.floor(member.banking?.balance || 0).toLocaleString();
 
-        output.style.display = "block";
-        output.innerText = "Loading data...";
+        // Render Armor Slots
+        const armorDiv = document.getElementById('armorSlots');
+        armorDiv.innerHTML = '';
+        // The API returns inventory as Base64 encoded NBT strings
+        // For this demo, we check if the string exists to show "equipped" status
+        for(let i=0; i<4; i++) {
+            armorDiv.innerHTML += `<div class="slot" title="Armor Piece ${i+1}">${member.armorContents ? '🛡️' : ''}</div>`;
+        }
 
-        try {
-            const response = await fetch(`${WORKER_URL}/v1/player/${username}`);
-            
-            if (response.status === 404) {
-                output.innerText = "Error: Player not found.";
-                return;
-            }
-
-            const data = await response.json();
-            output.innerText = JSON.stringify(data, null, 2);
-        } catch (err) {
-            output.innerText = "Error: Failed to fetch from worker.";
-            console.error(err);
+        // Render Inventory (First 9 slots)
+        const invDiv = document.getElementById('invSlots');
+        invDiv.innerHTML = '';
+        for(let i=0; i<27; i++) {
+            invDiv.innerHTML += `<div class="slot"></div>`;
         }
     }
-
-    // Event Listeners
-    document.getElementById('searchBtn').addEventListener('click', fetchPlayer);
-    
-    // Auto-load status on start
-    getNetworkStatus();
 </script>
-
 </body>
 </html>
