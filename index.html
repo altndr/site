@@ -2,145 +2,122 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CraftersMC | SkyStats</title>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <title>SkyStats | CraftersMC</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #121212; --card: #1e1e1e; --accent: #55ff55; --rarity-common: #ffffff; --rarity-rare: #5555ff; --rarity-epic: #aa00aa; --rarity-legendary: #ffaa00; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: #e0e0e0; margin: 0; padding: 20px; }
-        .dashboard-font { font-family: 'VT323', monospace; }
-        .container { max-width: 1100px; margin: auto; }
+        :root { --bg: #111; --card: #1c1c1c; --green: #55ff55; --gold: #ffaa00; }
+        body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; padding: 20px; }
+        .dashboard-font { font-family: 'VT323', monospace; letter-spacing: 1px; }
         
-        /* Header & Search */
-        .search-box { display: flex; gap: 10px; margin-bottom: 30px; }
-        input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #333; background: #252525; color: white; font-size: 1.1rem; }
-        button { padding: 12px 24px; background: var(--accent); color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .container { max-width: 800px; margin: auto; }
+        .search-area { display: flex; gap: 10px; margin-bottom: 30px; }
+        input { flex: 1; padding: 12px; border-radius: 5px; border: 1px solid #333; background: #222; color: white; }
+        button { padding: 12px 25px; background: var(--green); border: none; font-weight: bold; cursor: pointer; border-radius: 5px; }
 
-        /* Profile Layout */
-        .grid { display: grid; grid-template-columns: 300px 1fr; gap: 20px; }
-        .card { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid #333; }
+        .profile-card { background: var(--card); border: 2px solid #333; border-radius: 12px; padding: 25px; display: none; }
+        .profile-header { border-bottom: 2px solid #333; margin-bottom: 20px; padding-bottom: 10px; }
         
-        /* Avatar & Identity */
-        .player-head { width: 128px; height: 128px; image-rendering: pixelated; display: block; margin: 0 auto 15px; border: 4px solid #333; }
-        .rank-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; margin-bottom: 10px; }
-
-        /* Stats & Skills */
-        .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #2a2a2a; padding-bottom: 4px; }
-        .skill-bar { height: 8px; background: #111; border-radius: 4px; margin-top: 5px; overflow: hidden; }
-        .skill-progress { height: 100%; background: var(--accent); width: 0%; transition: width 1s; }
-
-        /* Inventory Slots */
-        .inventory-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; margin-top: 20px; }
-        .slot { width: 100%; aspect-ratio: 1/1; background: #333; border: 2px solid #1a1a1a; border-radius: 4px; display: flex; align-items: center; justify-content: center; position: relative; cursor: help; }
-        .slot:hover { background: #444; }
-        .slot img { width: 70%; }
-
-        .hidden { display: none; }
-        #loading { text-align: center; font-size: 1.5rem; margin-top: 50px; color: var(--accent); }
+        .skill-box { background: #252525; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid var(--green); }
+        .skill-name { font-size: 1.4rem; color: #aaa; }
+        .skill-level { font-size: 2.2rem; color: white; }
+        
+        .label { color: #666; font-size: 0.9rem; text-transform: uppercase; }
+        .active-tag { background: #5555ff; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="search-box">
-        <input type="text" id="usernameInput" placeholder="Enter Minecraft Username...">
-        <button onclick="loadProfile()">VIEW PROFILE</button>
+    <div class="search-area">
+        <input type="text" id="userInput" placeholder="Minecraft Username...">
+        <button onclick="fetchFullProfile()">SEARCH</button>
     </div>
 
-    <div id="loading" class="hidden dashboard-font">ACCESSING ARCHIVES...</div>
+    <div id="loading" class="dashboard-font" style="display:none; color:var(--green)">SYNCING WITH SERVER...</div>
 
-    <div id="mainDisplay" class="hidden">
-        <div class="grid">
-            <div class="card">
-                <img id="pHead" class="player-head" src="">
-                <div style="text-align: center;">
-                    <div id="pRank" class="rank-tag" style="background: #aaa; color: #000;">DEFAULT</div>
-                    <h2 id="pName" class="dashboard-font" style="margin: 5px 0; font-size: 2rem;">Username</h2>
-                </div>
-                
-                <div style="margin-top: 25px;">
-                    <h3 class="dashboard-font">GENERAL STATS</h3>
-                    <div class="stat-row"><span>Level</span> <span id="sLevel" class="dashboard-font" style="color:var(--accent)">0</span></div>
-                    <div class="stat-row"><span>Purse</span> <span id="sPurse" style="color:#ffaa00">0</span></div>
-                    <div class="stat-row"><span>Bank</span> <span id="sBank" style="color:#ffaa00">0</span></div>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3 class="dashboard-font">ARMOR & EQUIPMENT</h3>
-                <div class="inventory-grid" id="armorSlots" style="grid-template-columns: repeat(4, 1fr); max-width: 200px;">
-                    </div>
-
-                <h3 class="dashboard-font" style="margin-top: 30px;">INVENTORY</h3>
-                <div class="inventory-grid" id="invSlots">
-                    </div>
+    <div id="profileDisplay" class="profile-card">
+        <div class="profile-header">
+            <div class="label">Stats for</div>
+            <h1 id="dispUser" class="dashboard-font" style="margin:0; font-size: 3rem;">Username</h1>
+            <div style="margin-top:5px">
+                <span class="label">On Profile:</span> 
+                <span id="dispProfile" class="dashboard-font" style="color:var(--gold); font-size: 1.5rem;">Cucumber</span>
+                <span class="active-tag">ACTIVE</span>
             </div>
         </div>
+
+        <div id="skillsContainer">
+            </div>
     </div>
 </div>
 
 <script>
-    const WORKER = "https://nameless-disk-9baf.skyblock.workers.dev";
+    const WORKER_URL = "https://nameless-disk-9baf.skyblock.workers.dev";
 
-    async function loadProfile() {
-        const user = document.getElementById('usernameInput').value.trim();
-        if(!user) return;
+    async function fetchFullProfile() {
+        const username = document.getElementById('userInput').value.trim();
+        const display = document.getElementById('profileDisplay');
+        const loader = document.getElementById('loading');
+        
+        if (!username) return;
 
-        document.getElementById('loading').classList.remove('hidden');
-        document.getElementById('mainDisplay').classList.add('hidden');
+        loader.style.display = "block";
+        display.style.display = "none";
 
         try {
-            // 1. GET PLAYER UUID & PROFILE ID
-            const pRes = await fetch(`${WORKER}/v1/player/${user}`);
-            const pData = await pRes.json();
+            // 1. Get Player basic info (to find the active profile ID)
+            const playerRes = await fetch(`${WORKER_URL}/v1/player/${username}`);
+            const playerData = await playerRes.json();
             
-            // From schema: player.stats.skyBlock.profileId
-            const activeProfileId = pData.stats.skyBlock.profileId;
-            const uuid = pData.pixelId || ""; 
+            // 2. Get the Profile ID (From stats.skyBlock.profileId)
+            const activeId = playerData.stats.skyBlock.profileId;
+            const uuid = playerData.pixelId;
 
-            // 2. GET FULL SKYBLOCK PROFILE
-            const sbRes = await fetch(`${WORKER}/v1/skyblock/profile/${activeProfileId}`);
+            // 3. Get the SkyBlock Profile Data
+            const sbRes = await fetch(`${WORKER_URL}/v1/skyblock/profile/${activeId}`);
             const sbData = await sbRes.json();
-            
-            // Get the member data for the player (keys are UUIDs)
-            const member = sbData.members[Object.keys(sbData.members)[0]];
 
-            updateUI(pData, member, uuid);
-        } catch (e) {
-            alert("Error: " + e.message);
+            // 4. Find the specific member data for this player
+            const memberData = sbData.members[uuid];
+
+            renderUI(playerData.name, sbData.name, memberData);
+
+        } catch (err) {
+            console.error(err);
+            alert("Player or Profile not found!");
         } finally {
-            document.getElementById('loading').classList.add('hidden');
+            loader.style.display = "none";
         }
     }
 
-    function updateUI(player, member, uuid) {
-        document.getElementById('mainDisplay').classList.remove('hidden');
-        
-        // Identity
-        document.getElementById('pName').innerText = player.name;
-        document.getElementById('pHead').src = `https://crafatar.com/avatars/${uuid}?overlay`;
-        document.getElementById('pRank').innerText = player.selectedRank;
-        
-        // Basic Stats
-        document.getElementById('sLevel').innerText = member.level || 0;
-        document.getElementById('sPurse').innerText = Math.floor(member.coinPurse || 0).toLocaleString();
-        document.getElementById('sBank').innerText = Math.floor(member.banking?.balance || 0).toLocaleString();
+    function renderUI(user, profileName, member) {
+        document.getElementById('profileDisplay').style.display = "block";
+        document.getElementById('dispUser').innerText = user;
+        document.getElementById('dispProfile').innerText = profileName;
 
-        // Render Armor Slots
-        const armorDiv = document.getElementById('armorSlots');
-        armorDiv.innerHTML = '';
-        // The API returns inventory as Base64 encoded NBT strings
-        // For this demo, we check if the string exists to show "equipped" status
-        for(let i=0; i<4; i++) {
-            armorDiv.innerHTML += `<div class="slot" title="Armor Piece ${i+1}">${member.armorContents ? '🛡️' : ''}</div>`;
-        }
+        const skillsDiv = document.getElementById('skillsContainer');
+        skillsDiv.innerHTML = '';
 
-        // Render Inventory (First 9 slots)
-        const invDiv = document.getElementById('invSlots');
-        invDiv.innerHTML = '';
-        for(let i=0; i<27; i++) {
-            invDiv.innerHTML += `<div class="slot"></div>`;
-        }
+        // List of skills we want to show
+        const skillsToShow = ['combat', 'farming'];
+
+        skillsToShow.forEach(skillName => {
+            // CraftersMC typically stores skill data in a 'skills' object or as 'experience_skill_name'
+            // Check your API output to confirm the exact key (usually it's member.skills[name])
+            const skillData = member.skills?.[skillName] || { level: 0, experience: 0 };
+            
+            skillsDiv.innerHTML += `
+                <div class="skill-box">
+                    <div class="skill-name dashboard-font">${skillName.toUpperCase()}</div>
+                    <div class="skill-level dashboard-font">${skillData.level}</div>
+                    <div style="color:#555; font-size:0.8rem">
+                        XP: ${Math.floor(skillData.experience).toLocaleString()}
+                    </div>
+                </div>
+            `;
+        });
     }
 </script>
+
 </body>
 </html>
