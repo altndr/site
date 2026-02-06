@@ -1,0 +1,121 @@
+/* General Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body {
+  color: #e5e7eb;
+  min-height: 100vh;
+  background: #0f172a; /* Fallback color */
+}
+
+/* Main Layout Wrapper */
+.layout {
+  display: flex;
+  min-height: 100vh;
+  
+  /* The Background Image */
+  background-image: url('https://craftersmc.wiki.gg/images/thumb/Llyn_Village_Screenshot_04.png/1024px-Llyn_Village_Screenshot_04.png?9b0fbd');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed; /* Keeps image static while scrolling stats */
+}
+
+/* LEFT: Skin Panel (Clear Background) */
+.skin-panel {
+  width: 30%;
+  min-width: 320px;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: sticky;
+  top: 0;
+  /* Subtle dark tint so the skin stands out from the village background */
+  background: rgba(0, 0, 0, 0.2); 
+}
+
+.skin-panel canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* RIGHT: Stats Panel (Blurred Background) */
+.stats-panel {
+  flex: 1;
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  /* The SkyCrypt Blur Effect */
+  backdrop-filter: blur(15px) brightness(0.5);
+  -webkit-backdrop-filter: blur(15px) brightness(0.5);
+  
+  /* Semi-transparent dark overlay */
+  background: rgba(15, 23, 42, 0.6); 
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  min-height: 100vh;
+}
+
+.stats-panel h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Stat Rows (Glassmorphism style) */
+.stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(2, 6, 23, 0.7); 
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 16px 20px;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  transition: transform 0.2s ease;
+}
+
+.stat:hover {
+  transform: translateX(5px);
+  background: rgba(30, 41, 59, 0.8);
+}
+
+.label {
+  color: #94a3b8;
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+}
+
+#score, #tier {
+  font-weight: 600;
+  color: #fbbf24; /* Gold color for values */
+}
+
+/* 🔥 Responsive behavior */
+@media (max-width: 900px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .skin-panel {
+    width: 100%;
+    height: 400px;
+    position: relative;
+  }
+
+  .stats-panel {
+    width: 100%;
+    padding: 32px 20px;
+    /* Remove border on mobile and blur the whole section */
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
