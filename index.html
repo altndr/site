@@ -7,6 +7,25 @@
 
   <link rel="stylesheet" href="style.css" />
   <script src="https://unpkg.com/skinview3d/bundles/skinview3d.bundle.js"></script>
+  <header class="navbar">
+  <div class="nav-left">
+    <img src="https://sky.shiiyu.moe/resources/img/logo_square.webp" alt="Logo" class="nav-logo">
+    <span class="logo-text">SkyStats</span>
+  </div>
+
+  <div class="nav-center">
+    <div class="search-container">
+      <input type="text" id="userSearch" placeholder="Search Player..." autocomplete="off">
+      <kbd>↵</kbd>
+    </div>
+  </div>
+
+  <div class="nav-right">
+    <button class="settings-btn">
+      <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M12.22 2a1.23 1.23 0 0 0-1.22 1.22v.49a1.23 1.23 0 0 1-1.22 1.22H9.29a1.23 1.23 0 0 1-1.22-1.22v-.49A1.23 1.23 0 0 0 6.85 2h-1.1a1.23 1.23 0 0 0-1.22 1.22v.49a1.23 1.23 0 0 1-1.22 1.22H2.82a1.23 1.23 0 0 1-1.22-1.22v-.49A1.23 1.23 0 0 0 .38 2H0v20h.38a1.23 1.23 0 0 0 1.22-1.22v-.49a1.23 1.23 0 0 1 1.22-1.22h.49a1.23 1.23 0 0 1 1.22 1.22v.49A1.23 1.23 0 0 0 5.75 22h1.1a1.23 1.23 0 0 0 1.22-1.22v-.49a1.23 1.23 0 0 1 1.22-1.22h.49a1.23 1.23 0 0 1 1.22 1.22v.49A1.23 1.23 0 0 0 11 22h.38V2h-.16zM12 15a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"></path></svg>
+    </button>
+  </div>
+</header>
 </head>
 <body>
 
@@ -90,6 +109,17 @@ window.addEventListener("resize", () => {
   }
 });
 }
+  const searchInput = document.getElementById("userSearch");
+
+searchInput.addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    const user = searchInput.value.trim();
+    if (user) {
+      // This will navigate to your-site.vercel.app/Username
+      window.location.pathname = `/${user}`;
+    }
+  }
+});
 </script>
 
 </body>
