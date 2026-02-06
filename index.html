@@ -52,7 +52,7 @@
 </div>
 
 <script>
-    const WORKER_URL = "https://nameless-disk-9baf.skyblock.workers.dev";
+const WORKER_URL = "https://nameless-disk-9baf.skyblock.workers.dev";
 
 async function fetchFullProfile() {
     const username = document.getElementById('userInput').value.trim();
@@ -65,30 +65,32 @@ async function fetchFullProfile() {
     display.style.display = "none";
 
     try {
-        // 1. Get Player Data to get the UUID and Active Profile ID
+        // 1. Get basic player info to find the UUID (pixelId) and active Profile ID
         const playerRes = await fetch(`${WORKER_URL}/v1/player/${username}`);
         if (!playerRes.ok) throw new Error("Player not found");
         const playerData = await playerRes.json();
         
-        const activeId = playerData.stats.skyBlock.profileId; // The current profile ID
-        const uuid = playerData.pixelId; // The unique ID needed to find member stats
+        // pixelId is the UUID needed to look up the member in the next step
+        const uuid = playerData.pixelId; 
+        const activeProfileId = playerData.stats.skyBlock.profileId;
 
-        // 2. Get the SkyBlock Profile
-        const sbRes = await fetch(`${WORKER_URL}/v1/skyblock/profile/${activeId}`);
+        // 2. Get the specific SkyBlock Profile
+        const sbRes = await fetch(`${WORKER_URL}/v1/skyblock/profile/${activeProfileId}`);
         if (!sbRes.ok) throw new Error("Profile not found");
         const sbData = await sbRes.json();
 
-        // 3. Extract the member stats using the UUID
-        // Note: The 'members' object uses UUIDs as keys
+        // 3. IMPORTANT: Access the member using the UUID as the key
         const memberData = sbData.members[uuid];
         
-        if (!memberData) throw new Error("Member data not found in profile");
+        if (!memberData) {
+            throw new Error("Could not find member data for this UUID in the profile.");
+        }
 
-        // 4. Render the UI
+        // 4. Update the Page
         renderUI(playerData.name, sbData.cuteName, memberData);
 
     } catch (err) {
-        console.error(err);
+        console.error("Fetch Error:", err);
         alert(err.message);
     } finally {
         loader.style.display = "none";
@@ -99,16 +101,15 @@ function renderUI(user, profileName, member) {
     document.getElementById('profileDisplay').style.display = "block";
     document.getElementById('dispUser').innerText = user;
     
-    // Fix: Using cuteName from the profile data
+    // cuteName is the 'Cucumber' or 'Apple' profile name
     document.getElementById('dispProfile').innerText = profileName || "Unknown";
 
     const skillsDiv = document.getElementById('skillsContainer');
     skillsDiv.innerHTML = '';
 
-    // The API provides 'exp' and 'level' directly in the member object
-    // for the overall SkyBlock level, but specific skills may be experience-based.
+    // Extracting levels based on the SkyBlockProfileMember schema
     const stats = [
-        { name: 'SkyBlock Level', value: member.level },
+        { name: 'SkyBlock Level', value: member.level || 0 },
         { name: 'Combat', value: member.skills?.combat?.level || 0 },
         { name: 'Farming', value: member.skills?.farming?.level || 0 }
     ];
