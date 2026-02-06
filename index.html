@@ -37,8 +37,7 @@
 <script>
 // 1. Extract the username from the URL (e.g., mysite.com/Ndricim)
 // This splits the URL path and takes the last part
-const pathParts = window.location.pathname.split('/').filter(part => part !== "");
-const GAMERTAG = pathParts.length > 0 ? pathParts[pathParts.length - 1] : "ImNdricim";
+const GAMERTAG = window.location.pathname.split('/').filter(Boolean).pop() || "ImNdricim";
 
 const API = `https://mcprofile.io/api/v1/bedrock/gamertag/${GAMERTAG}`;
 
@@ -53,7 +52,6 @@ fetch(API)
     document.getElementById("name").textContent = data.gamertag;
     document.getElementById("score").textContent = data.gamescore;
     document.getElementById("tier").textContent = data.accounttier;
-
     initSkin(data.skin);
   })
   .catch(err => {
