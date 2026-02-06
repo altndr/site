@@ -45,11 +45,12 @@
 // This prefixes the request to bypass the browser's block
 const PROXY = "https://cors-anywhere.herokuapp.com/";
 const API_BASE = PROXY + "https://api.craftersmc.net/v1";
+      const API_KEY = "8f49d383-d0ac-44ff-8915-3c538ef1bele"; 
     const headers = {
         "Content-Type": "application/json",
         "X-API-Key": API_KEY 
     };
-  const API_KEY = "8f49d383-d0ac-44ff-8915-3c538ef1bele"; 
+
     // 1. Fetch Network Status on load
     async function getStatus() {
         try {
