@@ -2,130 +2,484 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SkyStats | CraftersMC</title>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CraftersMC Stats</title>
     <style>
-        :root { --bg: #111; --card: #1c1c1c; --green: #55ff55; --gold: #ffaa00; }
-        body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; padding: 20px; }
-        .dashboard-font { font-family: 'VT323', monospace; letter-spacing: 1px; }
-        
-        .container { max-width: 800px; margin: auto; }
-        .search-area { display: flex; gap: 10px; margin-bottom: 30px; }
-        input { flex: 1; padding: 12px; border-radius: 5px; border: 1px solid #333; background: #222; color: white; }
-        button { padding: 12px 25px; background: var(--green); border: none; font-weight: bold; cursor: pointer; border-radius: 5px; }
+        :root {
+            --bg-dark: #0b0c10;
+            --bg-card: #1f2833;
+            --text-main: #c5c6c7;
+            --text-highlight: #66fcf1;
+            --text-muted: #888;
+            --accent: #45a29e;
+            --border: #2d3844;
+        }
 
-        .profile-card { background: var(--card); border: 2px solid #333; border-radius: 12px; padding: 25px; display: none; }
-        .profile-header { border-bottom: 2px solid #333; margin-bottom: 20px; padding-bottom: 10px; }
-        
-        .skill-box { background: #252525; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid var(--green); }
-        .skill-name { font-size: 1.4rem; color: #aaa; }
-        .skill-level { font-size: 2.2rem; color: white; }
-        
-        .label { color: #666; font-size: 0.9rem; text-transform: uppercase; }
-        .active-tag { background: #5555ff; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* --- Search Section --- */
+        .search-container {
+            margin-top: 50px;
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--text-highlight);
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(102, 252, 241, 0.3);
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            flex-grow: 1;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid var(--border);
+            background-color: var(--bg-card);
+            color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        button.search-btn {
+            padding: 12px 24px;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        button.search-btn:hover {
+            background-color: var(--text-highlight);
+            color: var(--bg-dark);
+        }
+
+        /* --- Main Profile Header --- */
+        #profile-display {
+            display: none; /* Hidden until loaded */
+            width: 100%;
+            max-width: 1000px;
+            margin-top: 30px;
+            padding: 0 20px;
+        }
+
+        .header-card {
+            background-color: var(--bg-card);
+            padding: 30px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .player-head {
+            width: 64px;
+            height: 64px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .header-text {
+            font-size: 1.5rem;
+        }
+
+        .highlight {
+            color: var(--text-highlight);
+            font-weight: bold;
+        }
+
+        /* --- Profile Selector Dropdown --- */
+        .profile-selector-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .profile-trigger {
+            cursor: pointer;
+            background-color: rgba(102, 252, 241, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            border-bottom: 1px dashed var(--text-highlight);
+            user-select: none;
+        }
+
+        .profile-trigger:hover {
+            background-color: rgba(102, 252, 241, 0.2);
+        }
+
+        .profile-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #2b3642;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            min-width: 150px;
+            z-index: 100;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            margin-top: 5px;
+        }
+
+        .profile-dropdown.show {
+            display: block;
+        }
+
+        .profile-option {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .profile-option:hover {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .profile-option.active {
+            background-color: rgba(69, 162, 158, 0.3);
+            font-weight: bold;
+            color: var(--text-highlight);
+        }
+
+        /* --- Stats Grid --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background-color: var(--bg-card);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .stat-title {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        /* --- Loading / Error --- */
+        #status-msg {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .error { color: #ff6b6b; }
+        .loading { color: var(--text-highlight); }
+
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="search-area">
-        <input type="text" id="userInput" placeholder="Minecraft Username...">
-        <button onclick="fetchFullProfile()">SEARCH</button>
+    <div class="search-container">
+        <div class="logo">CraftersMC Stats</div>
+        <div class="search-box">
+            <input type="text" id="usernameInput" placeholder="Enter username..." onkeydown="if(event.key==='Enter') fetchPlayer()">
+            <button class="search-btn" onclick="fetchPlayer()">Search</button>
+        </div>
+        <div id="status-msg"></div>
     </div>
 
-    <div id="loading" class="dashboard-font" style="display:none; color:var(--green)">SYNCING WITH SERVER...</div>
-
-    <div id="profileDisplay" class="profile-card">
-        <div class="profile-header">
-            <div class="label">Stats for</div>
-            <h1 id="dispUser" class="dashboard-font" style="margin:0; font-size: 3rem;">Username</h1>
-            <div style="margin-top:5px">
-                <span class="label">On Profile:</span> 
-                <span id="dispProfile" class="dashboard-font" style="color:var(--gold); font-size: 1.5rem;">Cucumber</span>
-                <span class="active-tag">ACTIVE</span>
+    <div id="profile-display">
+        <div class="header-card">
+            <img id="player-head-img" class="player-head" src="" alt="Head">
+            <div class="header-text">
+                Stats for <span id="display-name" class="highlight"></span> on 
+                <div class="profile-selector-container">
+                    <span id="current-profile-name" class="highlight profile-trigger" onclick="toggleProfileDropdown()">Loading...</span>
+                    <div id="profile-dropdown-list" class="profile-dropdown">
+                        </div>
+                </div>
             </div>
         </div>
 
-        <div id="skillsContainer">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">Purse</div>
+                <div class="stat-value" id="stat-purse">-</div>
             </div>
+            <div class="stat-card">
+                <div class="stat-title">Bank</div>
+                <div class="stat-value" id="stat-bank">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Armor</div>
+                <div class="stat-value" id="stat-armor">
+                    <span id="armor-display">-</span>
+                </div>
+            </div>
+             <div class="stat-card">
+                <div class="stat-title">Gamemode</div>
+                <div class="stat-value" id="stat-gamemode">-</div>
+            </div>
+        </div>
+        
+        <br>
+        
+        <div class="stats-grid">
+             <div class="stat-card" style="border-left-color: #ff6b6b;">
+                <div class="stat-title">Zombie Slayer</div>
+                <div class="stat-value" id="slayer-zombie">-</div>
+            </div>
+            <div class="stat-card" style="border-left-color: #4ecdc4;">
+                <div class="stat-title">Spider Slayer</div>
+                <div class="stat-value" id="slayer-spider">-</div>
+            </div>
+             <div class="stat-card" style="border-left-color: #ffe66d;">
+                <div class="stat-title">Wolf Slayer</div>
+                <div class="stat-value" id="slayer-wolf">-</div>
+            </div>
+        </div>
     </div>
-</div>
 
 <script>
-const WORKER_URL = "https://nameless-disk-9baf.skyblock.workers.dev";
-
-async function fetchFullProfile() {
-    const username = document.getElementById('userInput').value.trim();
-    const display = document.getElementById('profileDisplay');
-    const loader = document.getElementById('loading');
+    const WORKER_URL = "https://nameless-disk-9baf.skyblock.workers.dev";
     
-    if (!username) return;
+    // State management
+    let currentPlayer = {
+        name: "",
+        uuid: "", // We might need to fetch this from a Mojang proxy if not in API
+        profiles: {} // Map of profileId -> cuteName
+    };
 
-    loader.style.display = "block";
-    display.style.display = "none";
-
-    try {
-        // 1. Get Player basic info
-        const playerRes = await fetch(`${WORKER_URL}/v1/player/${username}`);
-        if (!playerRes.ok) throw new Error("Player not found");
-        const playerData = await playerRes.json();
-        
-        const activeProfileId = playerData.stats.skyBlock.profileId;
-
-        // 2. Get the SkyBlock Profile
-        const sbRes = await fetch(`${WORKER_URL}/v1/skyblock/profile/${activeProfileId}`);
-        if (!sbRes.ok) throw new Error("Profile not found");
-        const sbData = await sbRes.json();
-
-        // 3. SMART MATCH: Find the member data
-        // We look for the ID provided by the player endpoint, 
-        // but if that fails, we take the first member in the profile.
-        const trimmedUuid = playerData.pixelId.replace(/-/g, "");
-        let memberData = sbData.members[trimmedUuid];
-
-        if (!memberData) {
-            console.warn("UUID mismatch. Defaulting to first profile member.");
-            const firstMemberId = Object.keys(sbData.members)[0];
-            memberData = sbData.members[firstMemberId];
-        }
-        
-        if (!memberData) throw new Error("No member data found in this profile.");
-
-        renderUI(playerData.name, sbData.cuteName, memberData);
-
-    } catch (err) {
-        console.error("Fetch Error:", err);
-        alert(err.message);
-    } finally {
-        loader.style.display = "none";
+    /**
+     * Formats numbers (e.g., 1000000 -> 1M)
+     */
+    function formatNumber(num) {
+        if (!num) return "0";
+        if (num >= 1000000) return (num / 1000000).toFixed(2) + "M";
+        if (num >= 1000) return (num / 1000).toFixed(1) + "k";
+        return num.toLocaleString();
     }
-}
 
-function renderUI(user, profileName, member) {
-    document.getElementById('profileDisplay').style.display = "block";
-    document.getElementById('dispUser').innerText = user;
-    document.getElementById('dispProfile').innerText = profileName || "Unknown";
+    /**
+     * Step 1: Fetch Basic Player Data
+     */
+    async function fetchPlayer() {
+        const username = document.getElementById('usernameInput').value.trim();
+        const statusDiv = document.getElementById('status-msg');
+        const displayDiv = document.getElementById('profile-display');
+        
+        if (!username) return;
 
-    const skillsDiv = document.getElementById('skillsContainer');
-    skillsDiv.innerHTML = '';
+        // Reset UI
+        statusDiv.innerHTML = '<span class="loading">Loading player data...</span>';
+        statusDiv.className = '';
+        displayDiv.style.display = 'none';
 
-    // The API schema shows 'level' and 'exp' are top-level member properties
-    // Skill levels are nested in the 'skills' object
-    const stats = [
-        { name: 'SkyBlock Level', value: member.level || 0 },
-        { name: 'Combat', value: member.skills?.combat?.level || 0 },
-        { name: 'Farming', value: member.skills?.farming?.level || 0 }
-    ];
+        try {
+            // 1. Get Player Data from CraftersMC API
+            const response = await fetch(`${WORKER_URL}/v1/player/${username}`);
+            
+            if (!response.ok) {
+                if (response.status === 404) throw new Error("Player not found.");
+                throw new Error("API Error: " + response.statusText);
+            }
 
-    stats.forEach(stat => {
-        skillsDiv.innerHTML += `
-            <div class="skill-box">
-                <div class="skill-name dashboard-font">${stat.name.toUpperCase()}</div>
-                <div class="skill-level dashboard-font">${stat.value}</div>
-            </div>
-        `;
-    });
-}
+            const data = await response.json();
+            
+            // Validate SkyBlock data exists
+            if (!data.stats || !data.stats.skyBlock || !data.stats.skyBlock.profiles) {
+                throw new Error("This player has not played SkyBlock.");
+            }
+
+            // 2. Fetch UUID (Need strictly for identifying member in profile)
+            // CraftersMC /player endpoint schema doesn't strictly show UUID, 
+            // so we fetch from Ashcon (Mojang proxy) to be safe and get the face.
+            const mojangRes = await fetch(`https://api.ashcon.app/mojang/v2/user/${username}`);
+            const mojangData = await mojangRes.json();
+
+            currentPlayer.name = data.name;
+            currentPlayer.uuid = mojangData.uuid; // Dashed UUID usually
+            currentPlayer.undashedUuid = mojangData.uuid.replace(/-/g, '');
+            currentPlayer.profiles = data.stats.skyBlock.profiles; // { "id": { "cuteName": "Apple" } } 
+            
+            // Set Header Info
+            document.getElementById('display-name').innerText = currentPlayer.name;
+            document.getElementById('player-head-img').src = `https://crafatar.com/avatars/${currentPlayer.uuid}?overlay`;
+
+            // 3. Determine last active profile or default to first
+            // The API schema has `stats.skyBlock.profileId` which is likely the active one
+            let activeProfileId = data.stats.skyBlock.profileId;
+            
+            // Fallback if null
+            if (!activeProfileId) {
+                activeProfileId = Object.keys(currentPlayer.profiles)[0];
+            }
+
+            // Render UI
+            renderProfileSelector(activeProfileId);
+            await loadProfile(activeProfileId);
+            
+            statusDiv.innerHTML = ""; // Clear loading message
+            displayDiv.style.display = 'block';
+
+        } catch (error) {
+            console.error(error);
+            statusDiv.innerHTML = `<span class="error">${error.message}</span>`;
+        }
+    }
+
+    /**
+     * Step 2: Render Dropdown
+     */
+    function renderProfileSelector(activeId) {
+        const list = document.getElementById('profile-dropdown-list');
+        list.innerHTML = '';
+
+        Object.keys(currentPlayer.profiles).forEach(pId => {
+            const profileData = currentPlayer.profiles[pId];
+            const cuteName = profileData.cuteName;
+
+            const item = document.createElement('div');
+            item.className = `profile-option ${pId === activeId ? 'active' : ''}`;
+            item.innerHTML = `<span>${cuteName}</span>`;
+            item.onclick = () => {
+                switchProfile(pId, cuteName);
+            };
+            list.appendChild(item);
+        });
+
+        // Set current name in trigger
+        const activeName = currentPlayer.profiles[activeId] ? currentPlayer.profiles[activeId].cuteName : "Unknown";
+        document.getElementById('current-profile-name').innerText = activeName;
+    }
+
+    function toggleProfileDropdown() {
+        document.getElementById('profile-dropdown-list').classList.toggle('show');
+    }
+
+    // Close dropdown if clicking outside
+    window.onclick = function(event) {
+        if (!event.target.matches('.profile-trigger')) {
+            var dropdowns = document.getElementsByClassName("profile-dropdown");
+            for (var i = 0; i < dropdowns.length; i++) {
+                var openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+        }
+    }
+
+    async function switchProfile(id, name) {
+        document.getElementById('current-profile-name').innerText = name;
+        renderProfileSelector(id); // Re-render to update 'active' class
+        await loadProfile(id);
+    }
+
+    /**
+     * Step 3: Fetch and Render Specific Profile Stats
+     */
+    async function loadProfile(profileId) {
+        const statusDiv = document.getElementById('status-msg');
+        
+        // Visual indicator of loading inside stats
+        document.getElementById('stat-purse').innerText = "...";
+        
+        try {
+            const response = await fetch(`${WORKER_URL}/v1/skyblock/profile/${profileId}`);
+            if (!response.ok) throw new Error("Failed to load profile details");
+            
+            const profileData = await response.json();
+            
+            // Find the specific member object using UUID
+            // CraftersMC API likely uses undashed UUIDs for keys
+            let member = profileData.members[currentPlayer.undashedUuid];
+            
+            // Fallback: Try dashed UUID if undashed fails
+            if (!member) {
+                member = profileData.members[currentPlayer.uuid];
+            }
+
+            if (!member) {
+                // Should not happen if logic is correct
+                throw new Error("Player member data not found in this profile.");
+            }
+
+            renderStats(profileData, member);
+
+        } catch (e) {
+            console.error(e);
+            alert("Error loading profile: " + e.message);
+        }
+    }
+
+    function renderStats(profile, member) {
+        // --- Basic Info ---
+        document.getElementById('stat-gamemode').innerText = profile.gameMode || "Normal";
+        
+        // --- Economy ---
+        // Purse is stored on the member object
+        document.getElementById('stat-purse').innerText = formatNumber(member.coinPurse || 0);
+        
+        // Bank is usually shared in profile.banking
+        if (profile.banking) {
+            document.getElementById('stat-bank').innerText = formatNumber(profile.banking.balance || 0);
+        } else {
+            document.getElementById('stat-bank').innerText = "0 (No Bank)";
+        }
+
+        // --- Armor ---
+        // Note: Armor is usually base64 encoded NBT. 
+        // We just check if it exists for this demo.
+        if (member.armorContents) {
+            document.getElementById('armor-display').innerText = "Equipped";
+            document.getElementById('armor-display').style.color = "#66fcf1";
+        } else {
+            document.getElementById('armor-display').innerText = "None";
+            document.getElementById('armor-display').style.color = "#888";
+        }
+
+        // --- Slayers ---
+        // Data is in member.slayerData
+        if (member.slayerData) {
+            document.getElementById('slayer-zombie').innerText = "Lvl " + (member.slayerData.zombieTier || 0);
+            document.getElementById('slayer-spider').innerText = "Lvl " + (member.slayerData.spiderTier || 0);
+            document.getElementById('slayer-wolf').innerText = "Lvl " + (member.slayerData.wolfTier || 0);
+        } else {
+             document.getElementById('slayer-zombie').innerText = "-";
+             document.getElementById('slayer-spider').innerText = "-";
+             document.getElementById('slayer-wolf').innerText = "-";
+        }
+    }
 </script>
 
 </body>
