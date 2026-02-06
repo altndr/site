@@ -54,69 +54,75 @@
 <script>
     const WORKER_URL = "https://nameless-disk-9baf.skyblock.workers.dev";
 
-    async function fetchFullProfile() {
-        const username = document.getElementById('userInput').value.trim();
-        const display = document.getElementById('profileDisplay');
-        const loader = document.getElementById('loading');
+async function fetchFullProfile() {
+    const username = document.getElementById('userInput').value.trim();
+    const display = document.getElementById('profileDisplay');
+    const loader = document.getElementById('loading');
+    
+    if (!username) return;
+
+    loader.style.display = "block";
+    display.style.display = "none";
+
+    try {
+        // 1. Get Player Data to get the UUID and Active Profile ID
+        const playerRes = await fetch(`${WORKER_URL}/v1/player/${username}`);
+        if (!playerRes.ok) throw new Error("Player not found");
+        const playerData = await playerRes.json();
         
-        if (!username) return;
+        const activeId = playerData.stats.skyBlock.profileId; // The current profile ID
+        const uuid = playerData.pixelId; // The unique ID needed to find member stats
 
-        loader.style.display = "block";
-        display.style.display = "none";
+        // 2. Get the SkyBlock Profile
+        const sbRes = await fetch(`${WORKER_URL}/v1/skyblock/profile/${activeId}`);
+        if (!sbRes.ok) throw new Error("Profile not found");
+        const sbData = await sbRes.json();
 
-        try {
-            // 1. Get Player basic info (to find the active profile ID)
-            const playerRes = await fetch(`${WORKER_URL}/v1/player/${username}`);
-            const playerData = await playerRes.json();
-            
-            // 2. Get the Profile ID (From stats.skyBlock.profileId)
-            const activeId = playerData.stats.skyBlock.profileId;
-            const uuid = playerData.pixelId;
+        // 3. Extract the member stats using the UUID
+        // Note: The 'members' object uses UUIDs as keys
+        const memberData = sbData.members[uuid];
+        
+        if (!memberData) throw new Error("Member data not found in profile");
 
-            // 3. Get the SkyBlock Profile Data
-            const sbRes = await fetch(`${WORKER_URL}/v1/skyblock/profile/${activeId}`);
-            const sbData = await sbRes.json();
+        // 4. Render the UI
+        renderUI(playerData.name, sbData.cuteName, memberData);
 
-            // 4. Find the specific member data for this player
-            const memberData = sbData.members[uuid];
-
-            renderUI(playerData.name, sbData.name, memberData);
-
-        } catch (err) {
-            console.error(err);
-            alert("Player or Profile not found!");
-        } finally {
-            loader.style.display = "none";
-        }
+    } catch (err) {
+        console.error(err);
+        alert(err.message);
+    } finally {
+        loader.style.display = "none";
     }
+}
 
-    function renderUI(user, profileName, member) {
-        document.getElementById('profileDisplay').style.display = "block";
-        document.getElementById('dispUser').innerText = user;
-        document.getElementById('dispProfile').innerText = profileName;
+function renderUI(user, profileName, member) {
+    document.getElementById('profileDisplay').style.display = "block";
+    document.getElementById('dispUser').innerText = user;
+    
+    // Fix: Using cuteName from the profile data
+    document.getElementById('dispProfile').innerText = profileName || "Unknown";
 
-        const skillsDiv = document.getElementById('skillsContainer');
-        skillsDiv.innerHTML = '';
+    const skillsDiv = document.getElementById('skillsContainer');
+    skillsDiv.innerHTML = '';
 
-        // List of skills we want to show
-        const skillsToShow = ['combat', 'farming'];
+    // The API provides 'exp' and 'level' directly in the member object
+    // for the overall SkyBlock level, but specific skills may be experience-based.
+    const stats = [
+        { name: 'SkyBlock Level', value: member.level },
+        { name: 'Combat', value: member.skills?.combat?.level || 0 },
+        { name: 'Farming', value: member.skills?.farming?.level || 0 }
+    ];
 
-        skillsToShow.forEach(skillName => {
-            // CraftersMC typically stores skill data in a 'skills' object or as 'experience_skill_name'
-            // Check your API output to confirm the exact key (usually it's member.skills[name])
-            const skillData = member.skills?.[skillName] || { level: 0, experience: 0 };
-            
-            skillsDiv.innerHTML += `
-                <div class="skill-box">
-                    <div class="skill-name dashboard-font">${skillName.toUpperCase()}</div>
-                    <div class="skill-level dashboard-font">${skillData.level}</div>
-                    <div style="color:#555; font-size:0.8rem">
-                        XP: ${Math.floor(skillData.experience).toLocaleString()}
-                    </div>
-                </div>
-            `;
-        });
-    }
+    stats.forEach(stat => {
+        skillsDiv.innerHTML += `
+            <div class="skill-box">
+                <div class="skill-name dashboard-font">${stat.name.toUpperCase()}</div>
+                <div class="skill-level dashboard-font">${stat.value}</div>
+            </div>
+        `;
+    });
+}
+
 </script>
 
 </body>
