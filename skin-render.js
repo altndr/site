@@ -62,15 +62,52 @@ window.onload = () => {
     }
 };
 
+function clearPlayerData() {
+    // 1. Reset global variables
+    currentPlayer = { name: "", uuid: null, profiles: {}, rank: "DEFAULT" };
+    cachedPlayerData = null;
+
+    // 2. Clear Text Elements
+    const nameEl = document.getElementById("name");
+    if (nameEl) nameEl.innerHTML = `<span style="color: #ef4444;">Player not found.</span>`;
+
+    const summaryContainer = document.getElementById('stats-summary');
+    if (summaryContainer) summaryContainer.innerHTML = "";
+
+    const skillsContainer = document.getElementById('skills-grid');
+    if (skillsContainer) skillsContainer.innerHTML = "";
+
+    const dropdown = document.getElementById('profile-dropdown-list');
+    if (dropdown) dropdown.innerHTML = "";
+
+    // 3. COMPLETE SKIN RESET
+    if (viewer) {
+        const canvas = document.getElementById("skin-canvas");
+        if (canvas) {
+            const context = canvas.getContext('2d') || canvas.getContext('webgl') || canvas.getContext('webgl2');
+            if (context) {
+                // This effectively "wipes" the drawing surface
+                canvas.width = canvas.width; 
+            }
+        }
+        viewer.dispose();
+        viewer = null;
+    }
+}
+
 async function fetchPlayer(username) {
     try {
         // Update URL bar immediately
         window.history.pushState({}, '', `/${username}`);
 
         const statsRes = await fetch(`${WORKER_URL}/v1/player/${username}`);
-        if (!statsRes.ok) throw new Error("Player not found");
-        const statsData = await statsRes.json();
-        
+        // If player doesn't exist, clear data and stop
+        if (!statsRes.ok) {
+            clearPlayerData();
+            return;
+        }
+                const statsData = await statsRes.json();
+
         cachedPlayerData = statsData;
 
         currentPlayer.rank = statsData.selectedRank || "DEFAULT"; 
