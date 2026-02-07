@@ -1,59 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Minecraft Profile</title>
-
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkyStats | Minecraft Profile</title>
+  
+  <link rel="stylesheet" href="style.css">
+  
   <script src="https://unpkg.com/skinview3d/bundles/skinview3d.bundle.js"></script>
-  <header class="navbar">
-  <div class="nav-left">
-    <img src="https://sky.shiiyu.moe/resources/img/logo_square.webp" alt="Logo" class="nav-logo">
-    <span class="logo-text">SkyStats</span>
-  </div>
-
-  <div class="nav-center">
-    <div class="search-container">
-      <input type="text" id="userSearch" placeholder="Search Player..." autocomplete="off">
-      <kbd>↵</kbd>
-    </div>
-  </div>
-
-  <div class="nav-right">
-    <button class="settings-btn">
-      <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M12.22 2a1.23 1.23 0 0 0-1.22 1.22v.49a1.23 1.23 0 0 1-1.22 1.22H9.29a1.23 1.23 0 0 1-1.22-1.22v-.49A1.23 1.23 0 0 0 6.85 2h-1.1a1.23 1.23 0 0 0-1.22 1.22v.49a1.23 1.23 0 0 1-1.22 1.22H2.82a1.23 1.23 0 0 1-1.22-1.22v-.49A1.23 1.23 0 0 0 .38 2H0v20h.38a1.23 1.23 0 0 0 1.22-1.22v-.49a1.23 1.23 0 0 1 1.22-1.22h.49a1.23 1.23 0 0 1 1.22 1.22v.49A1.23 1.23 0 0 0 5.75 22h1.1a1.23 1.23 0 0 0 1.22-1.22v-.49a1.23 1.23 0 0 1 1.22-1.22h.49a1.23 1.23 0 0 1 1.22 1.22v.49A1.23 1.23 0 0 0 11 22h.38V2h-.16zM12 15a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"></path></svg>
-    </button>
-  </div>
-</header>
 </head>
 <body>
 
-<div class="layout">
-
-  <!-- LEFT: SKIN -->
-  <div class="skin-panel">
-    <canvas id="skin-canvas"></canvas>
-  </div>
-
-  <!-- RIGHT: STATS -->
-  <div class="stats-panel">
-    <h1 id="name">Loading…</h1>
-
-    <div class="stat">
-      <span class="label">Gamerscore</span>
-      <span id="score">–</span>
+  <header class="navbar">
+    <div class="nav-left">
+      <img src="https://sky.shiiyu.moe/img/app-icons/svg.svg" alt="SkyStats Logo" class="nav-logo">
+      <span class="logo-text">SkyStats</span>
     </div>
 
-    <div class="stat">
-      <span class="label">Tier</span>
-      <span id="tier">–</span>
+    <div class="nav-center">
+      <div class="search-container">
+        <input type="text" id="userSearch" placeholder="Search Player..." autocomplete="off">
+        <kbd>↵</kbd>
+      </div>
     </div>
-  </div>
 
-</div>
+    <div class="nav-right">
+      <button class="settings-btn" aria-label="Settings">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
 
-<script src="skin-render.js "></script>
+  <main class="layout">
+    
+    <section class="skin-panel">
+      <canvas id="skin-canvas"></canvas>
+    </section>
 
+    <section class="stats-panel">
+      <div class="header-content">
+        <h1 id="name">Loading...</h1>
+      </div>
+
+<div id="stats-summary" class="stats-grid"></div>
+      <div id="skills-grid" class="skills-grid"></div>
+    </section>
+
+  </main>
+
+  <script src="skin-render.js"></script>
 </body>
 </html>

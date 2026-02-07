@@ -1,4 +1,15 @@
-/* General Reset */
+/* --- Variables & Setup --- */
+:root {
+  --bg-dark: #0f172a;
+  --text-main: #e5e7eb;
+  --text-muted: #94a3b8;
+  --accent-gold: #fbbf24;
+  --accent-orange: #f59e0b;
+  --success-green: #22c55e;
+  --border-light: rgba(255, 255, 255, 0.1);
+  --nav-height: 60px;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -7,134 +18,28 @@
 }
 
 body {
-  color: #e5e7eb;
-  min-height: 100vh;
-  background: #0f172a; /* Fallback color */
-}
-
-/* Main Layout Wrapper */
-.layout {
-  display: flex;
-  min-height: 100vh;
-  
-  /* The Background Image */
-  background-image: url('https://craftersmc.wiki.gg/images/thumb/Llyn_Village_Screenshot_04.png/1024px-Llyn_Village_Screenshot_04.png?9b0fbd');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed; /* Keeps image static while scrolling stats */
-}
-
-/* LEFT: Skin Panel (Clear Background) */
-.skin-panel {
-  width: 30%;
-  min-width: 320px;
+  color: var(--text-main);
+  background: var(--bg-dark);
+  overflow: hidden;
   height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: sticky;
-  top: 0;
-  /* Subtle dark tint so the skin stands out from the village background */
-  background: rgba(0, 0, 0, 0.2); 
 }
 
-.skin-panel canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-/* RIGHT: Stats Panel (Blurred Background) */
-.stats-panel {
-  flex: 1;
-  padding: 48px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-
-  /* The SkyCrypt Blur Effect */
-  backdrop-filter: blur(15px) brightness(0.5);
-  -webkit-backdrop-filter: blur(15px) brightness(0.5);
-  
-  /* Semi-transparent dark overlay */
-  background: rgba(15, 23, 42, 0.6); 
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
-  min-height: 100vh;
-}
-
-.stats-panel h1 {
-  font-size: 2.5rem;
-  font-weight: 700;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-}
-
-/* Stat Rows (Glassmorphism style) */
-.stat {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(2, 6, 23, 0.7); 
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 16px 20px;
-  border-radius: 10px;
-  font-size: 1.1rem;
-  transition: transform 0.2s ease;
-}
-
-.stat:hover {
-  transform: translateX(5px);
-  background: rgba(30, 41, 59, 0.8);
-}
-
-.label {
-  color: #94a3b8;
-  font-weight: 500;
-  text-transform: uppercase;
-  font-size: 0.85rem;
-  letter-spacing: 0.05em;
-}
-
-#score, #tier {
-  font-weight: 600;
-  color: #fbbf24; /* Gold color for values */
-}
-
-/* 🔥 Responsive behavior */
-@media (max-width: 900px) {
-  .layout {
-    flex-direction: column;
-    background-attachment: scroll;
-  }
-
-  .skin-panel {
-display: none !important;
-  }
-
-  .stats-panel {
-    width: 100%;
-    padding: 32px 20px;
-    /* Remove border on mobile and blur the whole section */
-    border-left: none;
-    backdrop-filter: blur(20px) brightness(0.4);
-    -webkit-backdrop-filter: blur(20px) brightness(0.4);
-    min-height: 100vh;
-  }
-}
-/* Navbar Styling */
+/* --- Navbar --- */
 .navbar {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  height: 60px;
+  height: var(--nav-height);
   background: rgba(15, 23, 42, 0.8);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
   z-index: 1000;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .nav-left {
@@ -158,9 +63,7 @@ display: none !important;
 }
 
 /* Search Bar */
-.nav-center {
-  flex: 0 1 400px;
-}
+.nav-center { flex: 0 1 400px; }
 
 .search-container {
   position: relative;
@@ -171,50 +74,358 @@ display: none !important;
 .search-container input {
   width: 100%;
   background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-light);
   padding: 8px 16px;
   border-radius: 6px;
   color: white;
   outline: none;
-  transition: border 0.2s;
+  transition: border-color 0.2s;
 }
 
-.search-container input:focus {
-  border-color: #fbbf24;
-}
+.search-container input:focus { border-color: var(--accent-gold); }
 
 .search-container kbd {
   position: absolute;
   right: 10px;
   font-size: 0.7rem;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--border-light);
   padding: 2px 5px;
   border-radius: 3px;
   color: #64748b;
 }
 
-/* Settings Button */
 .settings-btn {
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 8px;
   border-radius: 6px;
-  transition: background 0.2s;
+  transition: 0.2s;
 }
 
 .settings-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--border-light);
   color: white;
 }
 
-/* Push layout down below navbar */
+/* --- Layout --- */
 .layout {
-  padding-top: 60px; 
+  display: flex;
+  height: 100vh;
+  padding-top: var(--nav-height);
+  background: url('background.png') center/cover no-repeat fixed;
+  overflow: hidden;
 }
 
-/* Ensure skin panel accounts for navbar height */
 .skin-panel {
-  height: calc(100vh - 60px);
+  width: 30%;
+  min-width: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.skin-panel canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.stats-panel {
+  flex: 1;
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  backdrop-filter: blur(15px) brightness(0.5);
+  -webkit-backdrop-filter: blur(15px) brightness(0.5);
+  background: rgba(15, 23, 42, 0.6);
+  border-left: 1px solid var(--border-light);
+  overflow-y: auto;
+}
+
+/* Custom Scrollbar */
+.stats-panel::-webkit-scrollbar { width: 8px; }
+.stats-panel::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); }
+.stats-panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+/* --- Profile & Typography --- */
+#name {
+  font-size: 2rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  letter-spacing: -0.02em;
+}
+
+#name u { font-weight: 400; transition: 0.3s; }
+#name strong { font-weight: 800; }
+
+.profile-selector { position: relative; display: inline-block; }
+
+.profile-trigger-text {
+  cursor: pointer;
+  color: var(--accent-gold);
+  border-bottom: 2px dashed rgba(251, 191, 36, 0.4);
+  padding: 0 4px;
+  transition: 0.2s;
+}
+
+.profile-trigger-text:hover {
+  background: rgba(251, 191, 36, 0.1);
+  border-bottom-color: var(--accent-gold);
+}
+
+.profile-dropdown {
+  display: none;
+  position: absolute;
+  top: 110%;
+  left: 0;
+  min-width: 200px;
+  background: rgba(15, 23, 42, 0.98);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 8px 0;
+  z-index: 2000;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+}
+
+.profile-dropdown.show { display: block; }
+
+.profile-option {
+  padding: 10px 20px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.profile-option:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+}
+
+.profile-option.active {
+  color: var(--accent-gold);
+  font-weight: bold;
+  background: rgba(251, 191, 36, 0.05);
+}
+
+/* --- Skills Grid --- */
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding: 20px 0;
+}
+
+.skill-card-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.skill-card-container.wide { grid-column: span 2; }
+
+/* Icon Styles */
+.skill-icon-wrapper {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 8;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
+  border: 2px solid var(--border-light);
+  transition: background-color 0.3s;
+}
+
+.skill-icon {
+  width: 26px;
+  height: 26px;
+  image-rendering: pixelated;
+}
+
+.skill-card-container.wide .skill-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+/* Progress Section */
+.skill-header {
+  margin-left: 50px;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 1px;
+  display: flex;
+  gap: 8px;
+}
+
+.skill-level { color: rgba(255, 255, 255, 0.5); }
+
+.skill-progress-wrapper {
+  position: relative;
+  height: 20px;
+  background: var(--border-light);
+  border-radius: 20px;
+  overflow: hidden;
+  z-index: 5;
+  margin-left: 10px;
+}
+
+.skill-progress-bar {
+  height: 100%;
+  transition: width 0.5s ease, background-color 0.3s ease;
+}
+
+.skill-progress-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+  transform: translateY(-1px);
+}
+
+/* XP Hover Toggle */
+.xp-full { display: none; }
+.skill-card-container:hover .xp-short { display: none !important; }
+.skill-card-container:hover .xp-full { display: block !important; }
+
+/* State Based Colors */
+[data-state="green"] .skill-icon-wrapper,
+[data-state="green"] .skill-progress-bar { background-color: var(--success-green) !important; }
+
+[data-state="orange"] .skill-icon-wrapper,
+[data-state="orange"] .skill-progress-bar { background-color: var(--accent-orange) !important; }
+
+[data-state="gray"] .skill-icon-wrapper { background-color: #475569 !important; }
+[data-state="gray"] .skill-progress-bar { background-color: rgba(255, 255, 255, 0.05); }
+
+/* --- Responsive Styles --- */
+@media (max-width: 1200px) {
+  body { overflow: auto; height: auto; }
+  .layout { flex-direction: column; height: auto; }
+  .skin-panel { display: none !important; }
+}
+
+@media (max-width: 640px) {
+  .skills-grid { grid-template-columns: 1fr; }
+  .skill-card-container.wide { grid-column: span 1; }
+  #name { font-size: 1.5rem; }
+}
+
+:root {
+    --bg-color: #1a1a1a;
+    --card-bg: #2a2a2a;
+    --text-main: #ffffff;
+    --text-dim: #aaaaaa;
+    --gold: #ffac33;
+    --tooltip-bg: #333333;
+}
+
+/* Layout for the stats bar */
+.stats-grid {
+    display: flex;
+    gap: 20px;
+    background: var(--card-bg);
+    padding: 15px;
+    border-radius: 8px;
+    font-family: sans-serif;
+    color: var(--text-main);
+}
+
+/* Individual Stat Box */
+.stat-item {
+    position: relative; /* Required for tooltip positioning */
+    display: flex;
+    flex-direction: column;
+    cursor: help;
+    padding: 5px 10px;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+}
+
+.stat-value {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+/* Color Classes used in your JS */
+.gold { color: var(--gold); }
+.gray { color: var(--text-dim); }
+
+/* --- Tooltip Logic --- */
+.tooltip {
+    visibility: hidden;
+    position: absolute;
+    bottom: 125%; /* Position above the stat */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--tooltip-bg);
+    color: #fff;
+    text-align: center;
+    padding: 10px;
+    border-radius: 6px;
+    width: 180px;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.3s;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    font-size: 0.85rem;
+}
+
+.tooltip-title {
+    display: block;
+    font-weight: bold;
+    color: var(--gold);
+    margin-bottom: 4px;
+    border-bottom: 1px solid #444;
+}
+
+/* Show tooltip on hover */
+.stat-item:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Small arrow under tooltip */
+.tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: var(--tooltip-bg) transparent transparent transparent;
+}
+#stats-summary {
+    display: flex;
+    flex-wrap: wrap;       /* This allows items to go to the next line */
+    gap: 15px;             /* Adds spacing between wrapped items */
+    justify-content: center; /* Centers items on small screens */
+    width: 100%;
+}
+
+.stat-item {
+    flex: 1 1 120px;       /* Allows items to grow/shrink, base width 120px */
+    min-width: 100px;      /* Ensures they don't get too squished */
+    text-align: center;
 }
